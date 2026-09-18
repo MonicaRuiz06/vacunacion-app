@@ -1,0 +1,22 @@
+# Entornos virtuales
+.venv/
+venv/
+env/
+
+# Bytecode y cachés de Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Base de datos local (cada quien genera la suya)
+instance/*.db
+instance/*.sqlite3
+
+# Variables de entorno locales
+.env
+
+# Archivos del editor / SO
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

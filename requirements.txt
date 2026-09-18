@@ -1,0 +1,6 @@
+# Dependencias del proyecto.
+# Por ahora solo Flask; añadan aquí cualquier librería nueva que usen
+# (una por línea, con su versión) a medida que la vayan instalando con
+# pip install <paquete>, para que el resto del equipo pueda replicar
+# el entorno con: pip install -r requirements.txt
+Flask==3.1.3
