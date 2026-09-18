@@ -14,14 +14,14 @@ Para probar este archivo tal como está:
 Y abran http://127.0.0.1:5000 en el navegador.
 """
 
-from flask import Flask
+from flask import Flask, render_template
 
-app = Flask(__name__)
+app = Flask(__name__, template_folder="app/templates", static_folder="app/static")
 
 
 @app.route("/")
 def inicio():
-    return "Vacunacion-app: entorno configurado correctamente. Falta construir la aplicación."
+    return render_template("index.html")
 
 
 if __name__ == "__main__":
