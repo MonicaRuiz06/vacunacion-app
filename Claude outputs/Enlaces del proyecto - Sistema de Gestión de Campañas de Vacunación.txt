@@ -1,0 +1,15 @@
+Sistema de Gestión de Campañas de Vacunación — Enlaces del proyecto
+Mini-Proyecto I — Lenguajes de Programación (2026B)
+Integrantes: Mónica Alexandra Ruiz Martínez, Cristian David Valencia Hernández
+
+Repositorio (GitHub):
+https://github.com/MonicaRuiz06/vacunacion-app
+
+Documento del proyecto (Google Drive):
+https://docs.google.com/document/d/11seWmiM8Hj3iMUsozwCX81g-H0b8BvX6/edit?usp=sharing&ouid=106308444656561103303&rtpof=true&sd=true
+
+Tablero de Trello — Historias de usuario:
+https://trello.com/invite/b/6a9b52a64db6e35cc3271e81/ATTI1185031cd243989241c5a5ca4906cd616D977399/sistema-de-vacunacion-python-2026
+
+Tablero de Trello — Actividades del equipo:
+https://trello.com/invite/b/6aadaf00a109152853670e77/ATTI6141238cba19903d6716d1455981a025F6837213/sistema-de-vacunacion-python-2026
