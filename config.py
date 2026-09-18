@@ -3,7 +3,7 @@ Configuración de la aplicación.
 
 TODO (equipo): aquí va la configuración de Flask: SECRET_KEY, y la
 ruta del archivo de base de datos SQLite (por ejemplo, algo como
-instance/vacunacion.db). Revisen el documento del proyecto en Claude
+instance/vacunacion.db). Revisen el documento del proyecto.
 Docs para ver cómo quedó definido esto en la propuesta técnica.
 """
 

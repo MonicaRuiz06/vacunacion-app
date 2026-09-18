@@ -9,5 +9,5 @@ usando una función create_app() que:
   4. Inicialice la base de datos (ver app/models/)
 
 Referencia: la explicación de la arquitectura MVC está en el
-documento del proyecto (Claude Docs).
+documento del proyecto.
 """
