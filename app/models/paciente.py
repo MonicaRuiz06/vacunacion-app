@@ -1,8 +1,11 @@
 """ Modelo de pacientes, representa la informacion de los pacientes     
     registrados en el sistema de vacunacion """
 
+from app.utils import texto_requerido, fecha_requerida
+
+
 class Paciente:
-    def _init_(
+    def __init__(
         self,
         id=None,
         nombre_completo="",
@@ -24,4 +27,10 @@ class Paciente:
         self.correo = correo
         self.direccion = direccion
         self.municipio = municipio
-    
+
+    def validar(self):
+        texto_requerido(self.nombre_completo)
+        texto_requerido(self.identificacion)
+        fecha_requerida(self.fecha_nacimiento)
+
+        return True
