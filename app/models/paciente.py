@@ -33,4 +33,8 @@ class Paciente:
         texto_requerido(self.identificacion)
         fecha_requerida(self.fecha_nacimiento)
 
+        if self.correo and "@" not in self.correo:
+            raise ValueError("el correo no es valido ")
+        
+
         return True
