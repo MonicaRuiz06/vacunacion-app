@@ -1,13 +1,29 @@
-"""
-Fábrica de la aplicación (Application Factory Pattern).
+"""Fábrica de la aplicación Flask."""
 
-TODO (equipo): mover aquí la creación de la app Flask desde run.py,
-usando una función create_app() que:
-  1. Cree la instancia de Flask
-  2. Cargue la configuración desde config.py
-  3. Registre los blueprints de app/controllers/
-  4. Inicialice la base de datos (ver app/models/)
+import os
 
-Referencia: la explicación de la arquitectura MVC está en el
-documento del proyecto.
-"""
+from flask import Flask, render_template
+
+from app import db
+from config import Config
+
+
+def create_app(test_config=None):
+    app = Flask(__name__, instance_relative_config=True)
+    app.config.from_object(Config)
+    if test_config is not None:
+        app.config.update(test_config)
+
+    os.makedirs(app.instance_path, exist_ok=True)
+    db.init_app(app)
+
+    # El esquema usa CREATE IF NOT EXISTS, así que arrancar la app crea la
+    # base inicial una vez y conserva los datos en los siguientes arranques.
+    with app.app_context():
+        db.init_db()
+
+    @app.route("/")
+    def inicio():
+        return render_template("index.html")
+
+    return app
