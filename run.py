@@ -14,15 +14,15 @@ Para probar este archivo tal como está:
 Y abran http://127.0.0.1:5000 en el navegador.
 """
 
-from flask import Flask, render_template
+"""
+Punto de entrada de la aplicación.
+"""
 
-app = Flask(__name__, template_folder="app/templates", static_folder="app/static")
+from app import create_app
 
-
-@app.route("/")
-def inicio():
-    return render_template("index.html")
-
+app = create_app()
 
 if __name__ == "__main__":
     app.run(debug=True)
+
+
