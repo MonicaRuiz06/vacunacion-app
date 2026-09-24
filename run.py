@@ -18,6 +18,10 @@ Y abran http://127.0.0.1:5000 en el navegador.
 Punto de entrada de la aplicación.
 """
 
+"""
+Punto de entrada de la aplicación.
+"""
+
 from app import create_app
 
 app = create_app()
