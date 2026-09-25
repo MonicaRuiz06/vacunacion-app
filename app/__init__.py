@@ -26,4 +26,7 @@ def create_app(test_config=None):
     def inicio():
         return render_template("index.html")
 
+    from app.controllers.control_paciente import pacientes_bp
+    app.register_blueprint(pacientes_bp)
+
     return app

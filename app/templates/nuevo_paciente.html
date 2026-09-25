@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="es">
+<head><meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Registrar paciente</title>
+</head>
+
+<body>
+
+    <h1>Registrar paciente</h1>
+
+    <form method="POST">
+        <label>Nombre completo:</label>
+        <input type="text" name="nombre_completo" required>
+        <br><br>
+
+        <label>Identificación:</label>
+        <input type="text" name="identificacion" required>
+        <br><br>
+
+        <label>Fecha de nacimiento:</label>
+        <input type="date" name="fecha_nacimiento" required>
+        <br><br>
+
+        <label>Género:</label>
+        <select name="genero">
+            <option value="">Seleccione</option>
+            <option value="Masculino">Masculino</option>
+            <option value="Femenino">Femenino</option>
+            <option value="Otro">Otro</option>
+        </select>
+        <br><br>
+
+        <label>Teléfono:</label>
+        <input type="text" name="telefono">
+        <br><br>
+
+        <label>Correo:</label>
+        <input type="email" name="correo">
+        <br><br>
+
+        <label>Dirección:</label>
+        <input type="text" name="direccion">
+        <br><br>
+
+        <label>Municipio:</label>
+        <input type="text" name="municipio">
+        <br><br>
+
+        <button type="submit">Guardar paciente</button>
+
+    </form>
+
+    <br>
+
+    <a href="{{ url_for('pacientes.listar_pacientes') }}">
+        Volver a pacientes
+    </a>
+
+</body>
+</html>
+
+

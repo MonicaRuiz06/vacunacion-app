@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Pacientes</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body>
+    <h1>Lista de pacientes</h1>
+    <a href="{{ url_for('pacientes.nuevo_paciente') }}">
+    
+    
+    <button>Registrar paciente</button>
+    </a>
+
+    <br><br>
+
+    {% if pacientes %}
+    
+    <table border="1">
+    <thead>
+        <tr>
+        <th>ID</th>
+        <th>Nombre completo</th>
+        <th>Identificación</th>
+        <th>Fecha de nacimiento</th>
+        <th>Género</th>
+        <th>Teléfono</th>
+        <th>Correo</th>
+        <th>Municipio</th>
+        </tr>
+    </thead>
+
+    <tbody>
+    {% for paciente in pacientes %}
+    <tr>
+        <td>{{ paciente["id"] }}</td>
+        <td>{{ paciente["nombre_completo"] }}</td>
+        <td>{{ paciente["identificacion"] }}</td>
+        <td>{{ paciente["fecha_nacimiento"] }}</td>
+        <td>{{ paciente["genero"] }}</td>
+        <td>{{ paciente["telefono"] }}</td>
+        <td>{{ paciente["correo"] }}</td>
+        <td>{{ paciente["municipio"] }}</td>
+    </tr>
+    {% endfor %}
+    </tbody>
+    </table>
+
+    {% else %}
+
+        <p>No hay pacientes registrados.</p>
+
+    {% endif %}
+
+</body>
+</html>
+
+
