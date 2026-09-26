@@ -32,6 +32,7 @@
         <th>Teléfono</th>
         <th>Correo</th>
         <th>Municipio</th>
+        <th>Acciones</th>
         </tr>
     </thead>
 
@@ -46,6 +47,24 @@
         <td>{{ paciente["telefono"] }}</td>
         <td>{{ paciente["correo"] }}</td>
         <td>{{ paciente["municipio"] }}</td>
+        <td><a href="{{ url_for('pacientes.editar_paciente', id=paciente['id']) }}"> 
+            Editar</a>
+        
+        <form
+        action="{{ url_for('pacientes.eliminar_paciente', id=paciente['id']) }}"
+        method="POST"
+        style="display:inline;"
+    >
+
+        <button
+        type="submit"
+        
+        onclick="return confirm('¿Está seguro de eliminar este paciente?');">
+        Eliminar
+        </button>
+        
+        </form></td>
+
     </tr>
     {% endfor %}
     </tbody>

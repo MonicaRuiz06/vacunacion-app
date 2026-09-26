@@ -119,4 +119,16 @@ def editar_paciente(id):
     )
 
 
+@pacientes_bp.route("/pacientes/eliminar/<int:id>", methods=["POST"])
+def eliminar_paciente(id):
+    db = get_db()
+    db.execute("DELETE FROM pacientes WHERE id = ?",
+        (id,)
+    )
+
+    db.commit()
+
+    return redirect(url_for("pacientes.listar_pacientes"))
+
+
 

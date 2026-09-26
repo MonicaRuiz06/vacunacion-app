@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editar paciente</title>
+</head>
+
+<body>
+    <h1>Editar paciente</h1>
+    <form method="POST">
+
+    <label>Nombre completo:</label>
+    <input
+        type="text"
+        name="nombre_completo"
+        value="{{ paciente['nombre_completo'] }}"
+        required
+    >
+    <br><br>
+    <label>Identificación:</label>
+    <input
+        type="text"
+        name="identificacion"
+        value="{{ paciente['identificacion'] }}"
+        required
+    >
+    <br><br>
+    <label>Fecha de nacimiento:</label>
+    <input
+        type="date"
+        name="fecha_nacimiento"
+        value="{{ paciente['fecha_nacimiento'] }}"
+        required
+    >
+    <br><br>
+    <label>Género:</label>
+    
+    <select name="genero">
+        <option value="">Seleccione</option>
+        <option value="Masculino"
+        {% if paciente['genero'] == 'Masculino' %}selected{% endif %}>
+        Masculino
+    </option>
+
+    <option value="Femenino"
+        {% if paciente['genero'] == 'Femenino' %}selected{% endif %}>
+        Femenino
+    </option>
+    
+        <option value="Otro"
+        {% if paciente['genero'] == 'Otro' %}selected{% endif %}>
+        Otro
+    </option>
+</select>
+
+    <br><br>
+    <label>Teléfono:</label>
+    <input
+        type="text"
+        name="telefono"
+        value="{{ paciente['telefono'] or '' }}"
+    >
+
+    <br><br>
+    <label>Correo:</label>
+    <input
+        type="email"
+        name="correo"
+        value="{{ paciente['correo'] or '' }}"
+    >
+    <br><br>
+
+    <label>Dirección:</label>
+    <input
+        type="text"
+        name="direccion"
+        value="{{ paciente['direccion'] or '' }}"
+    >
+
+    <br><br>
+    <label>Municipio:</label>
+    <input
+        type="text"
+        name="municipio"
+        value="{{ paciente['municipio'] or '' }}"
+    >
+    <br><br>
+    <button type="submit">Guardar cambios</button>
+</form>
+
+<br>
+<a href="{{ url_for('pacientes.listar_pacientes') }}">
+        Cancelar
+    </a>
+
+</body>
+</html>
+
+
