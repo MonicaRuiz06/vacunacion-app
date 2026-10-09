@@ -6,7 +6,7 @@ from flask import Flask, render_template
 from flask_wtf.csrf import CSRFError, CSRFProtect
 
 from app import db
-from app.controllers import cuentas
+from app.controllers import cuentas, general
 from config import Config
 
 
@@ -22,6 +22,7 @@ def create_app(test_config=None):
     CSRFProtect(app)
 
     app.register_blueprint(cuentas.bp)
+    app.register_blueprint(general.bp)
 
     # El esquema usa CREATE IF NOT EXISTS, así que arrancar la app crea la
     # base inicial una vez y conserva los datos en los siguientes arranques.
@@ -33,6 +34,10 @@ def create_app(test_config=None):
         return render_template("index.html")
 
     # Páginas de error en español, con la plantilla común.
+    @app.errorhandler(400)
+    def solicitud_invalida(error):
+        return render_template("error.html", mensaje="La solicitud no es válida."), 400
+
     @app.errorhandler(403)
     def sin_permiso(error):
         return render_template("error.html", mensaje="No tienes permiso para esta acción."), 403

@@ -10,6 +10,7 @@ Usuarios
 
 <p><a href="{{ url_for('cuentas.nuevo_vacunador') }}">Invitar vacunador</a></p>
 
+<div class="tabla">
 <table>
   <thead>
     <tr><th>Nombre</th><th>Correo</th><th>Rol</th><th>Estado</th><th>Acciones</th></tr>
@@ -40,6 +41,7 @@ Usuarios
     {% endfor %}
   </tbody>
 </table>
+</div>
 
 <p>
   {% if pagina > 1 %}<a href="{{ url_for('cuentas.usuarios', pagina=pagina - 1) }}">Anterior</a>{% endif %}
