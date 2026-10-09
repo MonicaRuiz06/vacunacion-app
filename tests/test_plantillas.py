@@ -9,7 +9,7 @@ def test_inicio_usa_la_plantilla_base(client):
     html = client.get("/").get_data(as_text=True)
     assert '<html lang="es"' in html
     assert 'href="/"' in html
-    assert "Datos ficticios" in html
+    assert 'class="pie"' in html
 
 
 def test_mensaje_flash_se_muestra_despues_de_redirigir(app):

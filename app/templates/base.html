@@ -7,6 +7,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{% block titulo %}Sistema de Vacunación{% endblock %} · Vacunación USC</title>
+  <link rel="icon" href="{{ url_for('static', filename='img/logo.svg') }}" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@400;600;700;800&display=swap">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
@@ -17,7 +18,7 @@
   <header class="banda">
     <div class="banda-superior">
       <a class="marca" href="/">
-        <span class="logo" aria-hidden="true">Logo<br>USC</span>
+        <img class="logo" src="{{ url_for('static', filename='img/logo.svg') }}" alt="" width="52" height="52">
         <span>
           <strong>Campañas de Vacunación</strong>
           <small>Universidad Santiago de Cali · proyecto académico</small>
@@ -69,7 +70,7 @@
   </main>
 
   <footer class="pie">
-    Universidad Santiago de Cali · Proyecto académico · Datos ficticios
+    Universidad Santiago de Cali · Proyecto académico
   </footer>
 </body>
 </html>

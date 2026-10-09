@@ -61,18 +61,89 @@ se activan en cada conexión SQLite en `app/db.py`.
 
 ## Cuentas
 
-- Los pacientes crean su cuenta en «Crear cuenta» (desde los 16 años).
-- El primer administrador se crea desde la consola; pide los datos y la
-  contraseña, que no se guarda en el repositorio:
+Hay tres roles: **administrador**, **vacunador** y **paciente**. Cada cuenta
+tiene un solo rol. Todos los comandos se ejecutan en una terminal abierta en la
+carpeta del proyecto y con el entorno virtual activado:
+
+```bash
+# macOS/Linux
+source .venv/bin/activate
+# Windows
+.venv\Scripts\activate
+```
+
+### Paciente
+
+Cualquier persona desde los 16 años crea su cuenta en la app, con el enlace
+«Crear cuenta». Entre los 16 y 17 años debe marcar la declaración de
+autorización de su responsable.
+
+### Administrador
+
+El primer administrador se crea desde la terminal (no hay contraseñas guardadas
+en el repositorio):
 
 ```bash
 flask --app run crear-admin
 ```
 
-- El administrador invita a los vacunadores desde «Usuarios» y les asigna
-  puntos. El vacunador recibe un enlace para crear su contraseña. Mientras el
-  correo no esté configurado (módulo M06), `python run.py` muestra el enlace
-  en la consola.
+El comando pregunta, uno por uno:
+
+1. Nombre completo.
+2. Tipo de documento: `CC`, `CE` o `PASAPORTE`.
+3. Número de documento.
+4. Correo.
+5. Contraseña y su confirmación (no se ve mientras se escribe). Debe tener al
+   menos 6 caracteres, con mayúscula, minúscula, número y símbolo.
+
+Si todo está bien responde `Administrador creado.`. Solo se puede crear uno de
+esta forma; si ya existe, responde `Ya existe un administrador.`
+
+Para ingresar: `python run.py`, abrir http://127.0.0.1:5000/ingresar y usar el
+tipo y número de documento con la contraseña. El administrador ve «Usuarios»
+en el menú.
+
+### Vacunador
+
+El vacunador no se registra solo: el administrador lo invita y le asigna los
+puntos donde trabaja.
+
+1. **Debe existir al menos un punto de vacunación.** Se puede crear uno de prueba
+   con la app detenida:
+
+   ```bash
+   python -c "import sqlite3; db = sqlite3.connect('instance/vacunacion.db'); db.execute(\"INSERT INTO puntos_vacunacion (nombre, direccion, municipio, hora_apertura, hora_cierre) VALUES ('Punto Campus', 'Calle 5 # 62-00', 'Cali', '08:00', '16:00')\"); db.commit(); print('Punto creado')"
+   ```
+
+2. Ejecutar `python run.py`, ingresar como administrador y abrir **Usuarios →
+   Invitar vacunador**.
+3. Llenar nombre, documento y correo, marcar uno o más puntos y pulsar
+   **Invitar**.
+4. El vacunador recibe un enlace para crear su contraseña. **Mientras el correo
+   no esté configurado, el enlace aparece en la terminal donde
+   corre `python run.py`**, en un bloque como este:
+
+   ```text
+   --- Correo para juan@example.com: Invitación al sistema de vacunación
+   ...
+   Usa este enlace para establecer tu contraseña: http://127.0.0.1:5000/invitacion?token=...
+   ---
+   ```
+
+5. Abrir ese enlace (por ejemplo en una ventana privada, para no cerrar la
+   sesión del administrador), escribir la contraseña del vacunador y guardar.
+6. El vacunador ya puede ingresar con su documento y contraseña. En «Mi perfil»
+   ve sus puntos asignados.
+
+El enlace vence a los 30 minutos y solo sirve una vez. Si venció, en
+**Usuarios** aparece el botón **Renovar invitación**, que genera un enlace nuevo
+y anula el anterior. Los puntos de un vacunador se cambian con el enlace
+**Puntos** de esa misma tabla.
+
+### Olvidé mi contraseña
+
+En «Ingresar» → «Olvidé mi contraseña». El enlace de recuperación también
+aparece en la terminal mientras el correo no esté configurado.
 
 ## Acceso a SQLite desde Flask
 

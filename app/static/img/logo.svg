@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Campañas de Vacunación">
+  <!-- Logo del sistema: corazón con pulso sobre cuadro verde salud (#0C8058). -->
+  <rect width="64" height="64" rx="16" fill="#0C8058"/>
+  <path d="M32 47C22 40 13 33.5 13 24.5 13 19 17 15 22 15c4 0 7.5 2.2 10 6 2.5-3.8 6-6 10-6 5 0 9 4 9 9.5C51 33.5 42 40 32 47Z"
+        fill="none" stroke="#FFFFFF" stroke-width="3.6" stroke-linejoin="round"/>
+  <path d="M18 30h7.5l3-5.5 4.5 10 3-4.5H46"
+        fill="none" stroke="#FFFFFF" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

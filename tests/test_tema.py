@@ -67,3 +67,12 @@ def test_menu_oculto_no_reemplaza_el_permiso_del_servidor(app, client, reloj):
     ingresar(client)
     assert 'href="/usuarios"' not in client.get("/").get_data(as_text=True)
     assert client.get("/usuarios").status_code == 403
+
+
+def test_logo_en_cabecera_y_pestana(client):
+    html = client.get("/").get_data(as_text=True)
+    assert 'src="/static/img/logo.svg"' in html
+    assert 'rel="icon" href="/static/img/logo.svg"' in html
+    respuesta = client.get("/static/img/logo.svg")
+    assert respuesta.status_code == 200
+    assert "#0C8058" in respuesta.get_data(as_text=True)

@@ -101,20 +101,8 @@ a:hover { text-decoration-thickness: 2px; }
 .marca strong { display: block; font-size: 19px; font-weight: 800; line-height: 1.2; }
 .marca small { display: block; font-size: 13px; color: #BFD4EE; }
 
-/* Recuadro provisional hasta tener el logo autorizado de la universidad. */
-.logo {
-  display: grid;
-  place-items: center;
-  flex: none;
-  width: 52px;
-  height: 52px;
-  border: 2px dashed #8FB0D6;
-  border-radius: 8px;
-  font-size: 10px;
-  line-height: 1.2;
-  text-align: center;
-  color: #DCE8F7;
-}
+/* Logo del sistema (app/static/img/logo.svg). */
+.logo { flex: none; width: 52px; height: 52px; border-radius: 14px; }
 
 .herramientas { display: flex; align-items: center; gap: 14px; }
 .herramientas form { margin: 0; }
