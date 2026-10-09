@@ -6,6 +6,7 @@ from flask import Flask, render_template
 from flask_wtf.csrf import CSRFError, CSRFProtect
 
 from app import db
+from app.controllers import cuentas
 from config import Config
 
 
@@ -19,6 +20,8 @@ def create_app(test_config=None):
     db.init_app(app)
     # Protege todos los formularios POST; las plantillas usan {{ csrf_token() }}.
     CSRFProtect(app)
+
+    app.register_blueprint(cuentas.bp)
 
     # El esquema usa CREATE IF NOT EXISTS, así que arrancar la app crea la
     # base inicial una vez y conserva los datos en los siguientes arranques.

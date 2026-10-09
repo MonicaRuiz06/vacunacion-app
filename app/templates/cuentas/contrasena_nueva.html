@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% from "_formularios.html" import csrf_campo, campo %}
+
+{% block titulo %}
+{{ titulo }}
+{% endblock %}
+
+{% block contenido %}
+<h1>{{ titulo }}</h1>
+
+<p>El enlace vence a los 30 minutos y solo sirve una vez.</p>
+
+<form method="post">
+  {{ csrf_campo() }}
+  {{ campo("contrasena_nueva", "Nueva contraseña", {}, errores, tipo="password") }}
+  <p>Usa al menos 6 caracteres con mayúscula, minúscula, número y símbolo.</p>
+  <button type="submit">Guardar contraseña</button>
+</form>
+
+{% if errores.get("token") %}
+  <p><a href="{{ url_for('cuentas.recuperar') }}">Solicitar un enlace nuevo</a></p>
+{% endif %}
+{% endblock %}

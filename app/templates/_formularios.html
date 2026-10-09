@@ -11,9 +11,38 @@
 <div class="campo">
   <label for="{{ nombre }}">{{ etiqueta }}{% if not requerido %} (opcional){% endif %}</label>
   <input id="{{ nombre }}" name="{{ nombre }}" type="{{ tipo }}"
-    {% if tipo != "password" %}value="{{ valores.get(nombre, '') }}"{% endif %}
+    {% if tipo != "password" %}value="{{ valores.get(nombre) or '' }}"{% endif %}
     {% if requerido %}required{% endif %}
     {% if errores.get(nombre) %}aria-invalid="true" aria-describedby="{{ nombre }}-error"{% endif %}>
+  {% if errores.get(nombre) %}
+    <span class="error" id="{{ nombre }}-error">{{ errores[nombre] }}</span>
+  {% endif %}
+</div>
+{% endmacro %}
+
+{# Lista de tipos de documento (RF-02). #}
+{% macro documento(valores, errores) %}
+<div class="campo">
+  <label for="tipo_documento">Tipo de documento</label>
+  <select id="tipo_documento" name="tipo_documento">
+    {% for codigo, nombre in [("CC", "Cédula de ciudadanía"), ("CE", "Cédula de extranjería"), ("PASAPORTE", "Pasaporte")] %}
+      <option value="{{ codigo }}" {% if valores.get("tipo_documento") == codigo %}selected{% endif %}>{{ nombre }}</option>
+    {% endfor %}
+  </select>
+  {% if errores.get("tipo_documento") %}
+    <span class="error" id="tipo_documento-error">{{ errores["tipo_documento"] }}</span>
+  {% endif %}
+</div>
+{{ campo("identificacion", "Número de documento", valores, errores) }}
+{% endmacro %}
+
+{# Casilla de verificación con su mensaje de error. #}
+{% macro casilla(nombre, texto, marcada, errores) %}
+<div class="campo">
+  <label>
+    <input type="checkbox" name="{{ nombre }}" value="si" {% if marcada %}checked{% endif %}>
+    {{ texto }}
+  </label>
   {% if errores.get(nombre) %}
     <span class="error" id="{{ nombre }}-error">{{ errores[nombre] }}</span>
   {% endif %}

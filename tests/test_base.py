@@ -89,6 +89,7 @@ def test_ahora_usa_hora_de_bogota():
 
 
 def test_paciente_valida_campos_obligatorios():
-    assert Paciente(nombre_completo="Ana", identificacion="123", fecha_nacimiento="2000-01-01").validar()
+    datos = {"identificacion": "123", "fecha_nacimiento": "2000-01-01", "correo": "ana@example.com"}
+    assert Paciente(nombre_completo="Ana", **datos).validar()
     with pytest.raises(ValueError):
-        Paciente(nombre_completo="", identificacion="123", fecha_nacimiento="2000-01-01").validar()
+        Paciente(nombre_completo="", **datos).validar()

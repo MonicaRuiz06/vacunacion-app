@@ -13,8 +13,21 @@
     <a class="marca" href="/">Campañas de Vacunación</a>
     <nav aria-label="Navegación principal">
       <a href="/">Inicio</a>
-      {# Cada módulo agrega aquí sus enlaces según el rol de la sesión (M02/M03). #}
+      {# Cada módulo agrega aquí sus enlaces según el rol de la sesión. #}
       {% block navegacion %}{% endblock %}
+      {% if g.usuario %}
+        <a href="{{ url_for('cuentas.perfil') }}">Mi perfil</a>
+        {% if g.usuario.rol == "administrador" %}
+          <a href="{{ url_for('cuentas.usuarios') }}">Usuarios</a>
+        {% endif %}
+        <form method="post" action="{{ url_for('cuentas.salir') }}" class="en-linea">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button type="submit">Salir</button>
+        </form>
+      {% else %}
+        <a href="{{ url_for('cuentas.ingresar') }}">Ingresar</a>
+        <a href="{{ url_for('cuentas.registro') }}">Crear cuenta</a>
+      {% endif %}
     </nav>
   </header>
 

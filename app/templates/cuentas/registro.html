@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% from "_formularios.html" import csrf_campo, campo, documento, casilla %}
+
+{% block titulo %}
+Crear cuenta
+{% endblock %}
+
+{% block contenido %}
+<h1>Crear cuenta</h1>
+
+<p>Regístrate para reservar tus citas de vacunación. Debes tener al menos 16 años.</p>
+
+<form method="post">
+  {{ csrf_campo() }}
+  {{ campo("nombre_completo", "Nombre completo", valores, errores) }}
+  {{ documento(valores, errores) }}
+  {{ campo("fecha_nacimiento", "Fecha de nacimiento", valores, errores, tipo="date") }}
+  {{ casilla("declaracion_responsable",
+             "Tengo 16 o 17 años y mi responsable me autorizó a usar este sistema.",
+             valores.get("declaracion_responsable"), errores) }}
+  {{ campo("correo", "Correo", valores, errores, tipo="email") }}
+  {{ campo("contrasena", "Contraseña", valores, errores, tipo="password") }}
+  <p>Usa al menos 6 caracteres con mayúscula, minúscula, número y símbolo.</p>
+
+  <h2>Datos de contacto</h2>
+  {{ campo("telefono", "Teléfono", valores, errores, tipo="tel", requerido=false) }}
+  {{ campo("direccion", "Dirección", valores, errores, requerido=false) }}
+  {{ campo("municipio", "Municipio", valores, errores, requerido=false) }}
+  {{ campo("genero", "Género", valores, errores, requerido=false) }}
+
+  <button type="submit">Crear cuenta</button>
+</form>
+
+<p>¿Ya tienes cuenta? <a href="{{ url_for('cuentas.ingresar') }}">Ingresa aquí</a>.</p>
+{% endblock %}

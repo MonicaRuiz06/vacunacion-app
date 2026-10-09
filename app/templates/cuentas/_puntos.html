@@ -1,0 +1,15 @@
+{# Casillas para elegir puntos de vacunación. elegidos: lista de ids en texto. #}
+<fieldset>
+  <legend>Puntos asignados</legend>
+  {% for punto in puntos %}
+    <label>
+      <input type="checkbox" name="puntos" value="{{ punto.id }}" {% if punto.id | string in elegidos %}checked{% endif %}>
+      {{ punto.nombre }}
+    </label>
+  {% else %}
+    <p>Aún no hay puntos de vacunación registrados.</p>
+  {% endfor %}
+  {% if errores and errores.get("puntos") %}
+    <span class="error" id="puntos-error">{{ errores["puntos"] }}</span>
+  {% endif %}
+</fieldset>

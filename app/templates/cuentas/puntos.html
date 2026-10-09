@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% from "_formularios.html" import csrf_campo %}
+
+{% block titulo %}
+Puntos de {{ vacunador.nombre_completo }}
+{% endblock %}
+
+{% block contenido %}
+<h1>Puntos de {{ vacunador.nombre_completo }}</h1>
+
+<p>Los puntos sin marcar dejarán de estar autorizados para este vacunador.</p>
+
+<form method="post">
+  {{ csrf_campo() }}
+  {% include "cuentas/_puntos.html" %}
+  <button type="submit">Guardar puntos</button>
+</form>
+
+<p><a href="{{ url_for('cuentas.usuarios') }}">Volver a usuarios</a></p>
+{% endblock %}

@@ -38,7 +38,15 @@ define además `SECRET_KEY` con un valor secreto propio.
 El esquema se mantiene en `app/schema.sql` y se ejecuta con el módulo estándar
 `sqlite3` (no se usa ORM). Contiene:
 
-- `pacientes`: datos personales; la identificación es única.
+- `usuarios`: cuentas de administradores, vacunadores y pacientes; nombre,
+  tipo y número de documento (únicos juntos), correo único, contraseña con hash
+  y rol.
+- `pacientes`: fecha de nacimiento, contacto y declaración del responsable
+  (16–17 años); se enlaza con su cuenta en `usuarios`.
+- `tokens_cuenta`: enlaces de recuperación e invitación (solo el hash; vencen
+  en 30 minutos y se usan una vez).
+- `vacunador_punto`: puntos asignados a cada vacunador.
+- `auditoria`: quién cambió qué y cuándo, sin contraseñas.
 - `vacunas`: fabricante, lote, vencimiento y dosis requeridas.
 - `puntos_vacunacion`: ubicación, horario y capacidad diaria.
 - `inventarios_biologicos`: existencias por combinación de punto y vacuna.
@@ -50,6 +58,21 @@ se eliminan si se elimina el paciente; los puntos y vacunas referenciados por
 citas o dosis quedan protegidos contra borrado para conservar el historial.
 El inventario sí se elimina junto con su punto o vacuna. Las claves foráneas
 se activan en cada conexión SQLite en `app/db.py`.
+
+## Cuentas
+
+- Los pacientes crean su cuenta en «Crear cuenta» (desde los 16 años).
+- El primer administrador se crea desde la consola; pide los datos y la
+  contraseña, que no se guarda en el repositorio:
+
+```bash
+flask --app run crear-admin
+```
+
+- El administrador invita a los vacunadores desde «Usuarios» y les asigna
+  puntos. El vacunador recibe un enlace para crear su contraseña. Mientras el
+  correo no esté configurado (módulo M06), `python run.py` muestra el enlace
+  en la consola.
 
 ## Acceso a SQLite desde Flask
 
