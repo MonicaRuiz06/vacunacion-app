@@ -1,2 +1,250 @@
 /* Estilos del Sistema de Gestión de Campañas de Vacunación.
-   TODO (equipo): estilos propios, responsivos, sin frameworks externos. */
+   Diseño G · Banda de identidad (docs/ui-design.md). CSS propio, sin frameworks.
+
+   Tema: <html data-tema="claro|oscuro|sistema">. Cada color se escribe una vez
+   con light-dark(color en claro, color en noche); color-scheme decide cuál usar. */
+
+:root {
+  color-scheme: light;
+
+  --fondo: light-dark(#F3F6FA, #0A1220);
+  --tarjeta: light-dark(#FFFFFF, #111C2E);
+  --banda: light-dark(#004B87, #0F2A4D);
+  --diagonal: light-dark(#015F9E, #123A66);
+  --celeste: #52C7F3;
+  --texto: light-dark(#12233A, #E7EEF7);
+  --texto-suave: light-dark(#55657A, #9DB0C7);
+  --borde: light-dark(#D8E1EC, #22324A);
+  --enlace: light-dark(#0170B9, #7FD3F7);
+  --accion: light-dark(#0C8058, #4CC38A);
+  --texto-accion: light-dark(#FFFFFF, #062517);
+  --exito-fondo: light-dark(#E3F4EC, #1E5A42);
+  --exito-texto: light-dark(#0B6E4B, #BDF0D6);
+  --alerta-fondo: light-dark(#FFF3D6, #2A2410);
+  --alerta-texto: light-dark(#8A5300, #F3DFA8);
+  --info-fondo: light-dark(#E6F0FA, #12253F);
+  --info-texto: light-dark(#004B87, #BFD4EE);
+  --peligro: light-dark(#B42318, #FFB4A6);
+  --sombra: light-dark(0 8px 24px rgba(0, 48, 90, 0.12), 0 10px 28px rgba(0, 0, 0, 0.45));
+  --radio: 14px;
+}
+
+:root[data-tema="oscuro"] { color-scheme: dark; }
+:root[data-tema="sistema"] { color-scheme: light dark; }
+
+/* Botón de tema: se muestra el que cambia al otro modo. */
+[data-tema="claro"] .solo-oscuro,
+[data-tema="oscuro"] .solo-claro { display: none; }
+@media (prefers-color-scheme: dark) { [data-tema="sistema"] .solo-claro { display: none; } }
+@media (prefers-color-scheme: light) { [data-tema="sistema"] .solo-oscuro { display: none; } }
+
+/* --- Base --------------------------------------------------------------- */
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--fondo);
+  color: var(--texto);
+  font: 16px/1.55 "Libre Franklin", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+h1 { font-size: clamp(26px, 4vw, 34px); font-weight: 800; line-height: 1.15; margin: 0 0 16px; }
+h2 { font-size: 20px; font-weight: 800; margin: 28px 0 12px; }
+p { margin: 0 0 16px; }
+a { color: var(--enlace); text-underline-offset: 3px; }
+a:hover { text-decoration-thickness: 2px; }
+
+:focus-visible { outline: 3px solid var(--celeste); outline-offset: 3px; }
+
+.saltar { position: absolute; left: 16px; top: -100px; z-index: 10; padding: 10px 16px;
+  background: var(--tarjeta); color: var(--texto); border-radius: 8px; }
+.saltar:focus { top: 12px; }
+
+/* --- Banda de identidad --------------------------------------------------- */
+
+.banda {
+  position: relative;
+  overflow: hidden;
+  background: var(--banda);
+  color: #FFFFFF;
+  padding-bottom: 88px; /* espacio para que la hoja se monte encima */
+}
+
+/* Dos cortes diagonales a la derecha. */
+.banda::before,
+.banda::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: -80px;
+  height: 100%;
+}
+.banda::before { width: 520px; background: var(--diagonal); clip-path: polygon(30% 0, 100% 0, 100% 100%, 0 100%); }
+.banda::after { width: 300px; background: var(--celeste); opacity: 0.25; clip-path: polygon(45% 0, 100% 0, 100% 100%, 0 100%); }
+
+.banda-superior,
+.menu {
+  position: relative; /* por encima de las diagonales */
+  z-index: 1;
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 18px 32px 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+.banda-superior { justify-content: space-between; }
+
+.marca { display: flex; align-items: center; gap: 14px; color: #FFFFFF; text-decoration: none; }
+.marca strong { display: block; font-size: 19px; font-weight: 800; line-height: 1.2; }
+.marca small { display: block; font-size: 13px; color: #BFD4EE; }
+
+/* Logo del sistema (app/static/img/logo.svg). */
+.logo { flex: none; width: 52px; height: 52px; border-radius: 14px; }
+
+.herramientas { display: flex; align-items: center; gap: 14px; }
+.herramientas form { margin: 0; }
+.usuario { font-weight: 700; text-align: right; line-height: 1.2; }
+.usuario small { display: block; font-weight: 400; font-size: 13px; color: #BFD4EE; }
+
+.menu { padding-top: 18px; gap: 6px; }
+.menu form { margin: 0; }
+.menu a,
+.menu .enlace-salir {
+  display: inline-block;
+  min-height: 40px;
+  padding: 8px 16px;
+  border-radius: 999px;
+  color: #FFFFFF;
+  text-decoration: none;
+}
+.menu a:hover,
+.menu .enlace-salir:hover { background: rgba(255, 255, 255, 0.14); }
+.menu a[aria-current="page"] { background: #FFFFFF; color: #004B87; font-weight: 700; }
+
+/* Botones claros sobre la banda (tema y salir). */
+.boton-tema,
+.menu .enlace-salir {
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  background: transparent;
+  color: #FFFFFF;
+  font-weight: 600;
+}
+
+/* --- Hoja de contenido (se monta sobre la banda) --------------------------- */
+
+.hoja {
+  position: relative;
+  max-width: 1120px;
+  margin: -64px auto 40px;
+  padding: 32px;
+  background: var(--tarjeta);
+  border-radius: var(--radio);
+  box-shadow: var(--sombra);
+  min-height: 320px;
+}
+
+/* --- Mensajes ------------------------------------------------------------ */
+
+.mensaje { padding: 12px 16px; border-radius: 10px; border-left: 6px solid; margin-bottom: 20px; }
+.mensaje.exito { background: var(--exito-fondo); color: var(--exito-texto); }
+.mensaje.error { background: var(--alerta-fondo); color: var(--alerta-texto); }
+.mensaje.info { background: var(--info-fondo); color: var(--info-texto); }
+
+/* --- Formularios --------------------------------------------------------- */
+
+form { max-width: 640px; margin-bottom: 20px; }
+.campo { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
+label { font-weight: 600; }
+
+input:not([type="checkbox"]),
+select {
+  width: 100%;
+  min-height: 46px;
+  padding: 10px 12px;
+  border: 1px solid var(--borde);
+  border-radius: 10px;
+  background: var(--fondo);
+  color: var(--texto);
+  font: inherit;
+}
+input:not([type="checkbox"]):focus,
+select:focus { border-color: var(--enlace); }
+[aria-invalid="true"] { border-color: var(--peligro) !important; }
+.error { color: var(--peligro); font-size: 14px; }
+
+input[type="checkbox"] { width: 20px; height: 20px; margin: 0 8px 0 0; accent-color: var(--accion); vertical-align: -4px; }
+.campo label:has(input[type="checkbox"]),
+fieldset label { font-weight: 400; display: block; padding: 6px 0; }
+
+fieldset { border: 1px solid var(--borde); border-radius: 10px; padding: 12px 16px; margin: 0 0 16px; }
+legend { font-weight: 700; padding: 0 6px; }
+
+button {
+  min-height: 46px;
+  padding: 10px 22px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--accion);
+  color: var(--texto-accion);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+button:hover { filter: brightness(1.08); }
+
+/* Botón pequeño dentro de tablas (por ejemplo, renovar invitación). */
+.en-linea { display: inline; margin-left: 8px; }
+.en-linea button { min-height: 36px; padding: 6px 14px; font-size: 14px; }
+
+/* --- Tablas y listas ----------------------------------------------------- */
+
+.tabla { overflow-x: auto; margin-bottom: 16px; }
+table { width: 100%; border-collapse: collapse; }
+th, td { padding: 12px; text-align: left; border-bottom: 1px solid var(--borde); vertical-align: top; }
+th { font-size: 14px; color: var(--texto-suave); }
+
+dl { display: grid; grid-template-columns: max-content 1fr; gap: 8px 20px; }
+dt { color: var(--texto-suave); }
+dd { margin: 0; overflow-wrap: anywhere; }
+
+/* --- Inicio -------------------------------------------------------------- */
+
+.intro { max-width: 640px; color: var(--texto-suave); font-size: 18px; }
+.acciones { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 28px; }
+.boton {
+  display: inline-block;
+  min-height: 46px;
+  padding: 11px 22px;
+  border-radius: 999px;
+  background: var(--accion);
+  color: var(--texto-accion);
+  font-weight: 700;
+  text-decoration: none;
+}
+.boton.secundario { background: transparent; color: var(--enlace); border: 1px solid var(--borde); }
+
+.tarjetas { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
+.tarjetas article { padding: 20px; border: 1px solid var(--borde); border-radius: var(--radio); }
+.tarjetas h2 { margin-top: 0; font-size: 18px; }
+.tarjetas p { margin: 0; color: var(--texto-suave); }
+
+/* --- Pie ----------------------------------------------------------------- */
+
+.pie { max-width: 1120px; margin: 0 auto; padding: 0 32px 32px; font-size: 13px; color: var(--texto-suave); }
+
+/* --- Celular ------------------------------------------------------------- */
+
+@media (max-width: 700px) {
+  .banda { padding-bottom: 72px; }
+  .banda::before { width: 220px; }
+  .banda::after { width: 130px; }
+  .banda-superior, .menu { padding-left: 16px; padding-right: 16px; }
+  .marca small, .usuario { display: none; }
+  .menu { flex-wrap: nowrap; overflow-x: auto; }
+  .menu a, .menu .enlace-salir { white-space: nowrap; }
+  .hoja { margin: -56px 16px 32px; padding: 20px; }
+  .pie { padding: 0 16px 24px; }
+}

@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% from "_formularios.html" import csrf_campo, campo, documento %}
+
+{% block titulo %}
+Ingresar
+{% endblock %}
+
+{% block contenido %}
+<h1>Ingresar</h1>
+
+<form method="post">
+  {{ csrf_campo() }}
+  {{ documento(valores, errores) }}
+  {{ campo("contrasena", "Contraseña", valores, errores, tipo="password") }}
+  <button type="submit">Ingresar</button>
+</form>
+
+<p><a href="{{ url_for('cuentas.recuperar') }}">Olvidé mi contraseña</a></p>
+<p>¿No tienes cuenta? <a href="{{ url_for('cuentas.registro') }}">Créala aquí</a>.</p>
+{% endblock %}

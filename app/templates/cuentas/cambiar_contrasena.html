@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% from "_formularios.html" import csrf_campo, campo %}
+
+{% block titulo %}
+Cambiar contraseña
+{% endblock %}
+
+{% block contenido %}
+<h1>Cambiar contraseña</h1>
+
+<p>Al cambiarla se cerrarán todas tus sesiones abiertas.</p>
+
+<form method="post">
+  {{ csrf_campo() }}
+  {{ campo("contrasena_actual", "Contraseña actual", {}, errores, tipo="password") }}
+  {{ campo("contrasena_nueva", "Nueva contraseña", {}, errores, tipo="password") }}
+  <button type="submit">Cambiar contraseña</button>
+</form>
+{% endblock %}

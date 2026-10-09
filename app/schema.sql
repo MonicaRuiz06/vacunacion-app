@@ -6,16 +6,33 @@
 
 PRAGMA foreign_keys = ON;
 
-CREATE TABLE IF NOT EXISTS pacientes (
+-- Cuentas de acceso de los tres roles (M02). La identidad (nombre,
+-- documento y correo) vive aquí para no repetirla en pacientes.
+CREATE TABLE IF NOT EXISTS usuarios (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     nombre_completo TEXT NOT NULL,
-    identificacion TEXT NOT NULL UNIQUE,
+    tipo_documento TEXT NOT NULL CHECK (tipo_documento IN ('CC', 'CE', 'PASAPORTE')),
+    identificacion TEXT NOT NULL,     -- texto en mayúsculas: conserva ceros iniciales
+    correo TEXT NOT NULL UNIQUE,      -- guardado en minúsculas
+    password_hash TEXT,               -- NULL mientras la invitación está pendiente
+    rol TEXT NOT NULL CHECK (rol IN ('administrador', 'vacunador', 'paciente')),
+    activo INTEGER NOT NULL DEFAULT 1,
+    version_credenciales INTEGER NOT NULL DEFAULT 0,  -- al subir, cierra todas las sesiones
+    creado_en TEXT NOT NULL,
+    UNIQUE (tipo_documento, identificacion)
+);
+
+-- Datos propios del paciente. Nombre, documento y correo pasaron a
+-- usuarios (M02); el resto de columnas se conserva.
+CREATE TABLE IF NOT EXISTS pacientes (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    usuario_id INTEGER NOT NULL UNIQUE REFERENCES usuarios(id),
     fecha_nacimiento TEXT NOT NULL,   -- formato ISO 'YYYY-MM-DD'
     genero TEXT,
     telefono TEXT,
-    correo TEXT,
     direccion TEXT,
-    municipio TEXT
+    municipio TEXT,
+    declaracion_responsable TEXT      -- fecha en que declaró autorización (16 o 17 años)
 );
 
 CREATE TABLE IF NOT EXISTS vacunas (
@@ -73,6 +90,36 @@ CREATE TABLE IF NOT EXISTS dosis_aplicadas (
     numero_dosis INTEGER NOT NULL DEFAULT 1,
     fecha_aplicacion TEXT NOT NULL,   -- formato ISO 'YYYY-MM-DD'
     lote_aplicado TEXT
+);
+
+-- Enlaces de recuperación e invitación (M02): se guarda solo el hash,
+-- vencen a los 30 minutos y se borran al usarse o al pedir uno nuevo.
+CREATE TABLE IF NOT EXISTS tokens_cuenta (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    usuario_id INTEGER NOT NULL REFERENCES usuarios(id),
+    proposito TEXT NOT NULL CHECK (proposito IN ('recuperacion', 'invitacion')),
+    token_hash TEXT NOT NULL UNIQUE,
+    expira_en TEXT NOT NULL
+);
+
+-- Puntos donde puede trabajar cada vacunador (M02).
+CREATE TABLE IF NOT EXISTS vacunador_punto (
+    usuario_id INTEGER NOT NULL REFERENCES usuarios(id),
+    punto_id INTEGER NOT NULL REFERENCES puntos_vacunacion(id),
+    PRIMARY KEY (usuario_id, punto_id)
+);
+
+-- Historial de cambios importantes (quién, qué y cuándo). Nunca guarda
+-- contraseñas ni enlaces.
+CREATE TABLE IF NOT EXISTS auditoria (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    actor_id INTEGER NOT NULL REFERENCES usuarios(id),
+    accion TEXT NOT NULL,
+    tabla TEXT NOT NULL,
+    registro_id INTEGER NOT NULL,
+    detalle TEXT,                     -- valores anteriores y nuevos en JSON
+    motivo TEXT,
+    fecha TEXT NOT NULL
 );
 
 CREATE INDEX IF NOT EXISTS idx_citas_punto_fecha_hora ON citas (punto_id, fecha, hora);

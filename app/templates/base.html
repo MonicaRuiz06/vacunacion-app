@@ -1,17 +1,76 @@
+{% macro enlace(ruta, texto) -%}
+<a href="{{ ruta }}" {% if request.path == ruta %}aria-current="page"{% endif %}>{{ texto }}</a>
+{%- endmacro %}
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" data-tema="{{ tema }}">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{% block titulo %}Sistema de Vacunación{% endblock %}</title>
+  <title>{% block titulo %}Sistema de Vacunación{% endblock %} · Vacunación USC</title>
+  <link rel="icon" href="{{ url_for('static', filename='img/logo.svg') }}" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@400;600;700;800&display=swap">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
-  <!-- TODO (equipo): barra de navegación, mensajes flash, etc. -->
+  <a class="saltar" href="#contenido">Saltar al contenido</a>
 
-  <main>
+  <header class="banda">
+    <div class="banda-superior">
+      <a class="marca" href="/">
+        <img class="logo" src="{{ url_for('static', filename='img/logo.svg') }}" alt="" width="52" height="52">
+        <span>
+          <strong>Campañas de Vacunación</strong>
+          <small>Universidad Santiago de Cali · proyecto académico</small>
+        </span>
+      </a>
+
+      <div class="herramientas">
+        <form method="post" action="{{ url_for('general.cambiar_tema') }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <input type="hidden" name="volver" value="{{ request.path }}">
+          <button type="submit" name="tema" value="oscuro" class="boton-tema solo-claro">Modo noche</button>
+          <button type="submit" name="tema" value="claro" class="boton-tema solo-oscuro">Modo claro</button>
+        </form>
+        {% if g.usuario %}
+          <span class="usuario">
+            {{ g.usuario.nombre_completo }}
+            <small>{{ g.usuario.rol | capitalize }}</small>
+          </span>
+        {% endif %}
+      </div>
+    </div>
+
+    <nav class="menu" aria-label="Navegación principal">
+      {{ enlace("/", "Inicio") }}
+      {# Cada módulo agrega aquí sus enlaces según el rol de la sesión. #}
+      {% block navegacion %}{% endblock %}
+      {% if g.usuario %}
+        {% if g.usuario.rol == "administrador" %}
+          {{ enlace(url_for("cuentas.usuarios"), "Usuarios") }}
+        {% endif %}
+        {{ enlace(url_for("cuentas.perfil"), "Mi perfil") }}
+        <form method="post" action="{{ url_for('cuentas.salir') }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button type="submit" class="enlace-salir">Salir</button>
+        </form>
+      {% else %}
+        {{ enlace(url_for("cuentas.ingresar"), "Ingresar") }}
+        {{ enlace(url_for("cuentas.registro"), "Crear cuenta") }}
+      {% endif %}
+    </nav>
+  </header>
+
+  <main id="contenido" class="hoja">
+    {% for categoria, mensaje in get_flashed_messages(with_categories=true) %}
+      <p class="mensaje {{ categoria }}" role="status">{{ mensaje }}</p>
+    {% endfor %}
+
     {% block contenido %}{% endblock %}
   </main>
 
+  <footer class="pie">
+    Universidad Santiago de Cali · Proyecto académico
+  </footer>
 </body>
 </html>
