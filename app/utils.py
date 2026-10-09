@@ -3,6 +3,15 @@ Funciones de validacion reutilizables del sistema.
 """
 
 from datetime import datetime
+from zoneinfo import ZoneInfo
+
+ZONA_HORARIA = ZoneInfo("America/Bogota")
+
+
+def ahora():
+    """Fecha y hora actual en Colombia; las pruebas pueden reemplazarla."""
+    return datetime.now(ZONA_HORARIA)
+
 
 
 def texto_requerido(valor):
@@ -16,7 +25,7 @@ def fecha_requerida(valor):
         datetime.strptime(valor, "%Y-%m-%d")
         return valor
     
-    except ValueError:
+    except (ValueError, TypeError):
         raise ValueError("La fecha no es valida.")
 
 def entero_requerido(valor):
@@ -25,5 +34,3 @@ def entero_requerido(valor):
     
     except (ValueError, TypeError):
         raise ValueError("Debe ingresar un numero entero.")
-
-    

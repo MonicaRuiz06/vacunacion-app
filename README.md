@@ -1,6 +1,18 @@
 # vacunacion-app
 Sistema de Gestión de Campañas de Vacunación — Mini-Proyecto I, Lenguajes de Programación 2026B. Flask + SQLite, arquitectura MVC.
 
+## Diseño de la interfaz
+
+Propuesta elegida por el equipo: **banda de identidad** con el azul marino de la
+Universidad Santiago de Cali, verde para las acciones principales y tema claro y
+noche. Las imágenes son de la maqueta (datos ficticios); las pantallas reales se
+construyen módulo a módulo.
+
+<p>
+  <img src="assets/readme/diseno-escritorio-claro.png" alt="Panel del administrador en tema claro" width="68%">
+  <img src="assets/readme/diseno-celular-noche.png" alt="Mis citas del paciente en celular, tema noche" width="28%">
+</p>
+
 ## Preparar el entorno
 
 Requiere Python 3.10 o posterior.
@@ -46,3 +58,15 @@ se pueden leer por nombre de columna (`fila["nombre_completo"]`). Flask cierra
 la conexión al terminar el contexto de la petición. Al añadir modelos,
 mantenlos sobre esta conexión y usa consultas parametrizadas (`?`) para
 valores de usuario.
+
+## Pruebas
+
+Las pruebas usan pytest y una base temporal (nunca `instance/vacunacion.db`).
+
+```bash
+pip install -r requirements-dev.txt
+pytest -q
+```
+
+Cuando cambie `app/schema.sql`, borren su `instance/vacunacion.db` local y
+vuelvan a ejecutar la app para regenerarla (los datos son ficticios).

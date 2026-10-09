@@ -1,0 +1,21 @@
+{# Macros para formularios. Uso: {% from '_formularios.html' import csrf_campo, campo %} #}
+
+{# Campo oculto obligatorio en todo formulario POST (protección CSRF). #}
+{% macro csrf_campo() %}
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+{% endmacro %}
+
+{# Etiqueta, entrada y mensaje de error de un campo.
+   valores: datos ya enviados (request.form) · errores: {"campo": "mensaje"} #}
+{% macro campo(nombre, etiqueta, valores, errores, tipo="text", requerido=true) %}
+<div class="campo">
+  <label for="{{ nombre }}">{{ etiqueta }}{% if not requerido %} (opcional){% endif %}</label>
+  <input id="{{ nombre }}" name="{{ nombre }}" type="{{ tipo }}"
+    {% if tipo != "password" %}value="{{ valores.get(nombre, '') }}"{% endif %}
+    {% if requerido %}required{% endif %}
+    {% if errores.get(nombre) %}aria-invalid="true" aria-describedby="{{ nombre }}-error"{% endif %}>
+  {% if errores.get(nombre) %}
+    <span class="error" id="{{ nombre }}-error">{{ errores[nombre] }}</span>
+  {% endif %}
+</div>
+{% endmacro %}

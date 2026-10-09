@@ -7,11 +7,27 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
-  <!-- TODO (equipo): barra de navegación, mensajes flash, etc. -->
+  <a class="saltar" href="#contenido">Saltar al contenido</a>
 
-  <main>
+  <header class="cabecera">
+    <a class="marca" href="/">Campañas de Vacunación</a>
+    <nav aria-label="Navegación principal">
+      <a href="/">Inicio</a>
+      {# Cada módulo agrega aquí sus enlaces según el rol de la sesión (M02/M03). #}
+      {% block navegacion %}{% endblock %}
+    </nav>
+  </header>
+
+  <main id="contenido">
+    {% for categoria, mensaje in get_flashed_messages(with_categories=true) %}
+      <p class="mensaje {{ categoria }}" role="status">{{ mensaje }}</p>
+    {% endfor %}
+
     {% block contenido %}{% endblock %}
   </main>
 
+  <footer class="pie">
+    Universidad Santiago de Cali · Proyecto académico · Datos ficticios
+  </footer>
 </body>
 </html>
