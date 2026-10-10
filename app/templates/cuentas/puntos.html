@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from "_formularios.html" import csrf_campo %}
+{% from "_formularios.html" import csrf_campo, casillas %}
 
 {% block titulo %}
 Puntos de {{ vacunador.nombre_completo }}
@@ -12,7 +12,7 @@ Puntos de {{ vacunador.nombre_completo }}
 
 <form method="post">
   {{ csrf_campo() }}
-  {% include "cuentas/_puntos.html" %}
+  {{ casillas("puntos", "Puntos asignados", puntos, elegidos, errores or {}, vacio="Aún no hay puntos de vacunación registrados.") }}
   <button type="submit">Guardar puntos</button>
 </form>
 

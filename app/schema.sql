@@ -35,13 +35,22 @@ CREATE TABLE IF NOT EXISTS pacientes (
     declaracion_responsable TEXT      -- fecha en que declaró autorización (16 o 17 años)
 );
 
+-- La vacuna es el producto; sus lotes van en la tabla lotes (M04).
 CREATE TABLE IF NOT EXISTS vacunas (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     nombre TEXT NOT NULL,
     fabricante TEXT,
-    lote TEXT NOT NULL,
+    dosis_requeridas INTEGER NOT NULL DEFAULT 1 CHECK (dosis_requeridas >= 1)
+);
+
+-- Lotes de cada vacuna (M04). Un lote sirve hasta su fecha de vencimiento,
+-- inclusive; el mismo código puede repetirse en vacunas distintas.
+CREATE TABLE IF NOT EXISTS lotes (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    vacuna_id INTEGER NOT NULL REFERENCES vacunas(id),
+    codigo TEXT NOT NULL,
     fecha_vencimiento TEXT NOT NULL,  -- formato ISO 'YYYY-MM-DD'
-    dosis_requeridas INTEGER NOT NULL DEFAULT 1
+    UNIQUE (vacuna_id, codigo)
 );
 
 CREATE TABLE IF NOT EXISTS puntos_vacunacion (
@@ -52,6 +61,41 @@ CREATE TABLE IF NOT EXISTS puntos_vacunacion (
     hora_apertura TEXT NOT NULL,      -- formato 'HH:MM'
     hora_cierre TEXT NOT NULL,        -- formato 'HH:MM'
     capacidad_diaria INTEGER NOT NULL DEFAULT 50
+);
+
+-- Campañas (M04): nacen en borrador y se publican a mano.
+CREATE TABLE IF NOT EXISTS campanas (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    nombre TEXT NOT NULL,
+    descripcion TEXT NOT NULL,
+    fecha_inicio TEXT NOT NULL,       -- formato ISO 'YYYY-MM-DD'
+    fecha_fin TEXT NOT NULL,          -- formato ISO 'YYYY-MM-DD'
+    estado TEXT NOT NULL DEFAULT 'borrador'
+        CHECK (estado IN ('borrador', 'publicada', 'pausada', 'finalizada'))
+);
+
+-- Puntos y vacunas que participan en cada campaña (M04).
+CREATE TABLE IF NOT EXISTS campana_puntos (
+    campana_id INTEGER NOT NULL REFERENCES campanas(id),
+    punto_id INTEGER NOT NULL REFERENCES puntos_vacunacion(id),
+    PRIMARY KEY (campana_id, punto_id)
+);
+
+CREATE TABLE IF NOT EXISTS campana_vacunas (
+    campana_id INTEGER NOT NULL REFERENCES campanas(id),
+    vacuna_id INTEGER NOT NULL REFERENCES vacunas(id),
+    PRIMARY KEY (campana_id, vacuna_id)
+);
+
+-- Franjas de atención por punto y fecha (M04). Sus cupos se comparten
+-- entre todas las campañas del punto.
+CREATE TABLE IF NOT EXISTS franjas (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    punto_id INTEGER NOT NULL REFERENCES puntos_vacunacion(id),
+    fecha TEXT NOT NULL,              -- formato ISO 'YYYY-MM-DD'
+    hora_inicio TEXT NOT NULL,        -- formato 'HH:MM'
+    hora_fin TEXT NOT NULL,           -- formato 'HH:MM'
+    cupos INTEGER NOT NULL CHECK (cupos >= 1)
 );
 
 -- El inventario es solo un conteo de existencias por punto+vacuna:
@@ -65,19 +109,24 @@ CREATE TABLE IF NOT EXISTS inventarios_biologicos (
     UNIQUE (punto_id, vacuna_id)
 );
 
--- paciente_id sí elimina en cascada (la cita le pertenece al paciente).
--- vacuna_id y punto_id NO tienen ON DELETE: si tienen citas asociadas,
--- SQLite rechaza el DELETE con un error de integridad (el controlador
--- lo debe capturar y avisar al usuario, no dejar borrar en silencio).
+-- Citas (formato nuevo desde M04). Punto, fecha y hora salen de la franja.
+-- Reservada y presente ocupan cupo y reservan una dosis; aplicada,
+-- no aplicada y registro anulado siguen ocupando cupo; cancelada y no
+-- asistió lo liberan (RF-41). Sin borrado en cascada: la historia se conserva.
 CREATE TABLE IF NOT EXISTS citas (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    paciente_id INTEGER NOT NULL REFERENCES pacientes(id) ON DELETE CASCADE,
+    paciente_id INTEGER NOT NULL REFERENCES pacientes(id),
+    campana_id INTEGER NOT NULL REFERENCES campanas(id),
     vacuna_id INTEGER NOT NULL REFERENCES vacunas(id),
-    punto_id INTEGER NOT NULL REFERENCES puntos_vacunacion(id),
-    fecha TEXT NOT NULL,              -- formato ISO 'YYYY-MM-DD'
-    hora TEXT NOT NULL,               -- formato 'HH:MM'
-    estado TEXT NOT NULL DEFAULT 'pendiente'
-        CHECK (estado IN ('pendiente', 'confirmada', 'atendida', 'cancelada'))
+    franja_id INTEGER NOT NULL REFERENCES franjas(id),
+    estado TEXT NOT NULL DEFAULT 'reservada'
+        CHECK (estado IN ('reservada', 'presente', 'aplicada', 'no_aplicada',
+                          'registro_anulado', 'cancelada', 'no_asistio')),
+    creado_en TEXT NOT NULL,
+    llegada_en TEXT,
+    llegada_por INTEGER REFERENCES usuarios(id),
+    cierre_en TEXT,
+    motivo TEXT
 );
 
 -- Misma lógica que citas: paciente_id en cascada, vacuna_id y
@@ -122,5 +171,9 @@ CREATE TABLE IF NOT EXISTS auditoria (
     fecha TEXT NOT NULL
 );
 
-CREATE INDEX IF NOT EXISTS idx_citas_punto_fecha_hora ON citas (punto_id, fecha, hora);
+CREATE INDEX IF NOT EXISTS idx_citas_franja ON citas (franja_id);
+-- Un paciente solo puede tener una cita activa por vacuna (RF-16).
+CREATE UNIQUE INDEX IF NOT EXISTS idx_una_cita_activa ON citas (paciente_id, vacuna_id)
+    WHERE estado IN ('reservada', 'presente');
+CREATE INDEX IF NOT EXISTS idx_franjas_punto_fecha ON franjas (punto_id, fecha);
 CREATE INDEX IF NOT EXISTS idx_dosis_paciente ON dosis_aplicadas (paciente_id);

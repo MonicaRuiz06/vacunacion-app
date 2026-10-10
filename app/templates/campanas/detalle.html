@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% from "_formularios.html" import csrf_campo %}
+
+{% block titulo %}
+{{ campana.nombre }}
+{% endblock %}
+
+{% block contenido %}
+<h1>{{ campana.nombre }}</h1>
+
+<p>{% include "campanas/_estado.html" %} · {{ campana.fecha_inicio }} a {{ campana.fecha_fin }}</p>
+
+<p>{{ campana.descripcion }}</p>
+
+{% if g.usuario.rol == "administrador" %}
+  <div class="acciones">
+    <a class="boton secundario" href="{{ url_for('campanas.editar', campana_id=campana.id) }}">Editar</a>
+    {% for accion, texto, estado_necesario in [("publicar", "Publicar", "borrador"), ("pausar", "Pausar", "publicada"), ("reanudar", "Reanudar", "pausada")] %}
+      {% if campana.estado == estado_necesario %}
+        <form method="post" action="{{ url_for('campanas.cambiar_estado', campana_id=campana.id, accion=accion) }}">
+          {{ csrf_campo() }}
+          <button type="submit">{{ texto }}</button>
+        </form>
+      {% endif %}
+    {% endfor %}
+  </div>
+  {% if campana.estado == "pausada" %}
+    <p class="mensaje info">La campaña está pausada: no recibe reservas nuevas y conserva las citas existentes.</p>
+  {% endif %}
+{% endif %}
+
+<h2>Vacunas</h2>
+<ul>
+  {% for vacuna in campana.vacunas() %}
+    <li>{{ vacuna.nombre }} · {{ vacuna.dosis_requeridas }} dosis</li>
+  {% else %}
+    <li>Sin vacunas asignadas.</li>
+  {% endfor %}
+</ul>
+
+<h2>Puntos</h2>
+<ul>
+  {% for punto in campana.puntos() %}
+    <li>{{ punto.nombre }} · {{ punto.direccion }} · {{ punto.hora_apertura }} – {{ punto.hora_cierre }}</li>
+  {% else %}
+    <li>Sin puntos asignados.</li>
+  {% endfor %}
+</ul>
+
+<h2>Franjas</h2>
+<div class="tabla">
+<table>
+  <thead><tr><th>Fecha</th><th>Punto</th><th>Horario</th><th>Cupos</th></tr></thead>
+  <tbody>
+    {% for franja in campana.franjas() %}
+      <tr><td>{{ franja.fecha }}</td><td>{{ franja.punto }}</td><td>{{ franja.hora_inicio }} – {{ franja.hora_fin }}</td><td>{{ franja.cupos }}</td></tr>
+    {% else %}
+      <tr><td colspan="4">No hay franjas en los puntos y fechas de esta campaña.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+</div>
+
+<p><a href="{{ url_for('campanas.campanas') }}">Volver a campañas</a></p>
+{% endblock %}

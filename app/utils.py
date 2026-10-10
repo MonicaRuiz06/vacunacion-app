@@ -23,12 +23,26 @@ def texto_requerido(valor):
     return valor.strip()
 
 def fecha_requerida(valor):
+    # Se exige AAAA-MM-DD completo porque las fechas se comparan como texto.
     try:
         datetime.strptime(valor, "%Y-%m-%d")
+        if len(valor) != 10:
+            raise ValueError
         return valor
     
     except (ValueError, TypeError):
         raise ValueError("La fecha no es valida.")
+
+def hora_requerida(valor):
+    # Formato HH:MM de 24 horas; también se compara como texto.
+    try:
+        datetime.strptime(valor, "%H:%M")
+        if len(valor) != 5:
+            raise ValueError
+        return valor
+
+    except (ValueError, TypeError):
+        raise ValueError("La hora no es valida.")
 
 def entero_requerido(valor):
     try:

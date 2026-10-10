@@ -48,3 +48,52 @@
   {% endif %}
 </div>
 {% endmacro %}
+
+{# Lista desplegable. opciones: filas con id y el campo indicado en texto. #}
+{% macro seleccion(nombre, etiqueta, opciones, valores, errores, texto="nombre") %}
+<div class="campo">
+  <label for="{{ nombre }}">{{ etiqueta }}</label>
+  <select id="{{ nombre }}" name="{{ nombre }}" {% if errores.get(nombre) %}aria-invalid="true" aria-describedby="{{ nombre }}-error"{% endif %}>
+    <option value="">Elige una opción</option>
+    {% for opcion in opciones %}
+      <option value="{{ opcion.id }}" {% if valores.get(nombre) | string == opcion.id | string %}selected{% endif %}>{{ opcion[texto] }}</option>
+    {% endfor %}
+  </select>
+  {% if errores.get(nombre) %}
+    <span class="error" id="{{ nombre }}-error">{{ errores[nombre] }}</span>
+  {% endif %}
+</div>
+{% endmacro %}
+
+{# Grupo de casillas para elegir varias opciones. elegidos: lista de ids en texto. #}
+{% macro casillas(nombre, leyenda, opciones, elegidos, errores, texto="nombre", vacio="No hay opciones registradas.") %}
+<fieldset>
+  <legend>{{ leyenda }}</legend>
+  {% for opcion in opciones %}
+    <label>
+      <input type="checkbox" name="{{ nombre }}" value="{{ opcion.id }}" {% if opcion.id | string in elegidos %}checked{% endif %}>
+      {{ opcion[texto] }}
+    </label>
+  {% else %}
+    <p>{{ vacio }}</p>
+  {% endfor %}
+  {% if errores.get(nombre) %}
+    <span class="error" id="{{ nombre }}-error">{{ errores[nombre] }}</span>
+  {% endif %}
+</fieldset>
+{% endmacro %}
+
+{# Texto largo (por ejemplo, la descripción de una campaña). #}
+{% macro area_texto(nombre, etiqueta, valores, errores) %}
+<div class="campo">
+  <label for="{{ nombre }}">{{ etiqueta }}</label>
+  <textarea id="{{ nombre }}" name="{{ nombre }}" rows="4" required
+    {% if errores.get(nombre) %}aria-invalid="true" aria-describedby="{{ nombre }}-error"{% endif %}>{{ valores.get(nombre) or '' }}</textarea>
+  {% if errores.get(nombre) %}
+    <span class="error" id="{{ nombre }}-error">{{ errores[nombre] }}</span>
+  {% endif %}
+</div>
+{% endmacro %}
+
+{# Etiqueta de estado (campaña, lote...). El texto siempre acompaña al color. #}
+{% macro estado(clave, texto) %}<span class="estado estado-{{ clave }}">{{ texto }}</span>{% endmacro %}

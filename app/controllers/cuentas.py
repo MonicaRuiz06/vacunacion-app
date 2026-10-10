@@ -7,7 +7,8 @@ from flask import Blueprint, abort, flash, g, redirect, render_template, request
 
 from app.db import get_db
 from app.models.paciente import Paciente
-from app.models.usuario import Usuario, crear_token, listar_puntos, usar_token
+from app.models.punto import Punto
+from app.models.usuario import Usuario, crear_token, usar_token
 from app.utils import ErroresFormulario, ahora, enviar_correo
 
 bp = Blueprint("cuentas", __name__, cli_group=None)
@@ -279,7 +280,7 @@ def nuevo_vacunador():
             errores = error.errores
             flash(str(error), "error")
     return render_template("cuentas/vacunador.html", valores=request.form, errores=errores,
-                           puntos=listar_puntos(), elegidos=request.form.getlist("puntos")), (
+                           puntos=Punto.listar(), elegidos=request.form.getlist("puntos")), (
         400 if errores else 200
     )
 
@@ -297,7 +298,7 @@ def puntos_vacunador(usuario_id):
             flash(str(error), "error")
     elegidos = [str(punto["id"]) for punto in vacunador.puntos()]
     return render_template("cuentas/puntos.html", vacunador=vacunador,
-                           puntos=listar_puntos(), elegidos=elegidos)
+                           puntos=Punto.listar(), elegidos=elegidos)
 
 
 @bp.route("/usuarios/<int:usuario_id>/invitacion", methods=["POST"])

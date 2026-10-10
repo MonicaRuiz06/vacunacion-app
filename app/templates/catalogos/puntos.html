@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block titulo %}
+Puntos de vacunación
+{% endblock %}
+
+{% block contenido %}
+<h1>Puntos de vacunación</h1>
+
+<p><a class="boton" href="{{ url_for('catalogos.editar_punto') }}">Nuevo punto</a></p>
+
+<div class="tabla">
+<table>
+  <thead>
+    <tr><th>Nombre</th><th>Dirección</th><th>Horario</th><th>Capacidad diaria</th><th>Acciones</th></tr>
+  </thead>
+  <tbody>
+    {% for punto in puntos %}
+      <tr>
+        <td>{{ punto.nombre }}</td>
+        <td>{{ punto.direccion }}{% if punto.municipio %}, {{ punto.municipio }}{% endif %}</td>
+        <td>{{ punto.hora_apertura }} – {{ punto.hora_cierre }}</td>
+        <td>{{ punto.capacidad_diaria }}</td>
+        <td><a href="{{ url_for('catalogos.editar_punto', punto_id=punto.id) }}">Editar</a></td>
+      </tr>
+    {% else %}
+      <tr><td colspan="5">Aún no hay puntos registrados.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endblock %}

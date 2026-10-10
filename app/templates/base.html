@@ -46,7 +46,12 @@
       {# Cada módulo agrega aquí sus enlaces según el rol de la sesión. #}
       {% block navegacion %}{% endblock %}
       {% if g.usuario %}
+        {{ enlace(url_for("campanas.campanas"), "Campañas") }}
         {% if g.usuario.rol == "administrador" %}
+          {{ enlace(url_for("campanas.franjas"), "Franjas") }}
+          {{ enlace(url_for("catalogos.puntos"), "Puntos") }}
+          {{ enlace(url_for("catalogos.vacunas"), "Vacunas") }}
+          {{ enlace(url_for("catalogos.lotes"), "Lotes") }}
           {{ enlace(url_for("cuentas.usuarios"), "Usuarios") }}
         {% endif %}
         {{ enlace(url_for("cuentas.perfil"), "Mi perfil") }}

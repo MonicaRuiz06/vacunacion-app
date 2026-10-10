@@ -160,7 +160,8 @@ form { max-width: 640px; margin-bottom: 20px; }
 label { font-weight: 600; }
 
 input:not([type="checkbox"]),
-select {
+select,
+textarea {
   width: 100%;
   min-height: 46px;
   padding: 10px 12px;
@@ -171,7 +172,8 @@ select {
   font: inherit;
 }
 input:not([type="checkbox"]):focus,
-select:focus { border-color: var(--enlace); }
+select:focus,
+textarea:focus { border-color: var(--enlace); }
 [aria-invalid="true"] { border-color: var(--peligro) !important; }
 .error { color: var(--peligro); font-size: 14px; }
 
@@ -199,12 +201,25 @@ button:hover { filter: brightness(1.08); }
 .en-linea { display: inline; margin-left: 8px; }
 .en-linea button { min-height: 36px; padding: 6px 14px; font-size: 14px; }
 
+/* Filtros en línea sobre una tabla. */
+.filtros { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px; max-width: none; }
+.filtros .campo { margin-bottom: 0; min-width: 180px; }
+
+/* Botones de acción uno al lado del otro (editar, publicar...). */
+.acciones form { margin: 0; }
+
 /* --- Tablas y listas ----------------------------------------------------- */
 
 .tabla { overflow-x: auto; margin-bottom: 16px; }
 table { width: 100%; border-collapse: collapse; }
 th, td { padding: 12px; text-align: left; border-bottom: 1px solid var(--borde); vertical-align: top; }
 th { font-size: 14px; color: var(--texto-suave); }
+
+/* Etiquetas de estado: el texto siempre acompaña al color. */
+.estado { display: inline-block; padding: 2px 12px; border-radius: 999px; font-size: 13px; font-weight: 700; }
+.estado-publicada, .estado-vigente { background: var(--exito-fondo); color: var(--exito-texto); }
+.estado-pausada, .estado-vencido { background: var(--alerta-fondo); color: var(--alerta-texto); }
+.estado-borrador, .estado-finalizada { background: var(--info-fondo); color: var(--info-texto); }
 
 dl { display: grid; grid-template-columns: max-content 1fr; gap: 8px 20px; }
 dt { color: var(--texto-suave); }

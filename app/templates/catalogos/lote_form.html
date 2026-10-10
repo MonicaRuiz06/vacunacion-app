@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% from "_formularios.html" import csrf_campo, campo, seleccion %}
+
+{% block titulo %}
+Nuevo lote
+{% endblock %}
+
+{% block contenido %}
+<h1>Nuevo lote</h1>
+
+<form method="post">
+  {{ csrf_campo() }}
+  {{ seleccion("vacuna_id", "Vacuna", vacunas, valores, errores) }}
+  {{ campo("codigo", "Código del lote", valores, errores) }}
+  {{ campo("fecha_vencimiento", "Fecha de vencimiento", valores, errores, tipo="date") }}
+  <button type="submit">Registrar lote</button>
+</form>
+
+<p><a href="{{ url_for('catalogos.lotes') }}">Volver a lotes</a></p>
+{% endblock %}

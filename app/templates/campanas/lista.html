@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block titulo %}
+Campañas
+{% endblock %}
+
+{% block contenido %}
+<h1>Campañas</h1>
+
+{% if g.usuario.rol == "administrador" %}
+  <p><a class="boton" href="{{ url_for('campanas.editar') }}">Nueva campaña</a></p>
+{% else %}
+  <p>Campañas de vacunación abiertas. La reserva de citas estará disponible pronto.</p>
+{% endif %}
+
+<div class="tabla">
+<table>
+  <thead>
+    <tr><th>Campaña</th><th>Fechas</th><th>Vacunas</th><th>Puntos</th><th>Estado</th></tr>
+  </thead>
+  <tbody>
+    {% for campana in campanas %}
+      <tr>
+        <td><a href="{{ url_for('campanas.detalle', campana_id=campana.id) }}">{{ campana.nombre }}</a></td>
+        <td>{{ campana.fecha_inicio }} a {{ campana.fecha_fin }}</td>
+        <td>{{ campana.vacunas() | map(attribute="nombre") | join(", ") or "—" }}</td>
+        <td>{{ campana.puntos() | length }}</td>
+        <td>{% include "campanas/_estado.html" %}</td>
+      </tr>
+    {% else %}
+      <tr><td colspan="5">No hay campañas para mostrar.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endblock %}

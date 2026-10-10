@@ -6,7 +6,7 @@ from flask import Flask, render_template
 from flask_wtf.csrf import CSRFError, CSRFProtect
 
 from app import db
-from app.controllers import cuentas, general
+from app.controllers import campanas, catalogos, cuentas, general
 from config import Config
 
 
@@ -23,6 +23,8 @@ def create_app(test_config=None):
 
     app.register_blueprint(cuentas.bp)
     app.register_blueprint(general.bp)
+    app.register_blueprint(catalogos.bp)
+    app.register_blueprint(campanas.bp)
 
     # El esquema usa CREATE IF NOT EXISTS, así que arrancar la app crea la
     # base inicial una vez y conserva los datos en los siguientes arranques.

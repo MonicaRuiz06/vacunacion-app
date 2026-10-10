@@ -93,11 +93,6 @@ def revisar_puntos(puntos_ids):
     return ids
 
 
-def listar_puntos():
-    """Todos los puntos de vacunación (M04 tendrá su propio modelo de puntos)."""
-    return get_db().execute("SELECT id, nombre FROM puntos_vacunacion ORDER BY nombre").fetchall()
-
-
 def resumir_token(token):
     """En la base solo se guarda el hash del enlace, nunca el enlace."""
     return hashlib.sha256(token.encode()).hexdigest()
