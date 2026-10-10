@@ -57,6 +57,7 @@
           {{ enlace(url_for("catalogos.lotes"), "Lotes") }}
           {{ enlace(url_for("cuentas.usuarios"), "Usuarios") }}
         {% endif %}
+        {{ enlace(url_for("avisos.avisos"), "Avisos") }}
         {{ enlace(url_for("cuentas.perfil"), "Mi perfil") }}
         <form method="post" action="{{ url_for('cuentas.salir') }}">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">

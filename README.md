@@ -57,6 +57,7 @@ El esquema se mantiene en `app/schema.sql` y se ejecuta con el módulo estándar
 - `inventarios_biologicos`: saldo físico por punto y lote; nunca es negativo.
 - `movimientos_inventario`: cada entrada o ajuste con cantidad, motivo, autor
   y fecha.
+- `notificaciones`: avisos en la cuenta de cada usuario y el estado de su correo.
 - `citas`: paciente, campaña, vacuna, franja y estado (reservada, presente,
   aplicada, no aplicada, registro anulado, cancelada o no asistió). Un paciente
   tiene como máximo una cita activa por vacuna.
@@ -121,9 +122,9 @@ puntos donde trabaja.
    Invitar vacunador**.
 3. Llenar nombre, documento y correo, marcar uno o más puntos y pulsar
    **Invitar**.
-4. El vacunador recibe un enlace para crear su contraseña. **Mientras el correo
-   no esté configurado, el enlace aparece en la terminal donde
-   corre `python run.py`**, en un bloque como este:
+4. El vacunador recibe un enlace para crear su contraseña. **Si el correo no
+   está configurado, el enlace aparece en la terminal donde corre
+   `python run.py`**, en un bloque como este:
 
    ```text
    --- Correo para juan@example.com: Invitación al sistema de vacunación
@@ -145,7 +146,7 @@ y anula el anterior. Los puntos de un vacunador se cambian con el enlace
 ### Olvidé mi contraseña
 
 En «Ingresar» → «Olvidé mi contraseña». El enlace de recuperación también
-aparece en la terminal mientras el correo no esté configurado.
+aparece en la terminal si el correo no está configurado.
 
 ## Catálogos y campañas (administrador)
 
@@ -179,6 +180,14 @@ franja no pueden quedar por debajo de las citas que ya la ocupan.
   reservadas por citas activas y el faltante. Si hay faltante, las reservas
   nuevas de esa vacuna en ese punto quedan bloqueadas; las citas existentes se
   conservan.
+
+## Avisos y correo
+
+Cada usuario ve sus avisos en «Avisos». Si un correo falla, el aviso se conserva
+y el personal lo reintenta en «Avisos → Correos fallidos». Para enviar correos
+reales, copia `.env.example` como `.env` y completa los datos del correo (el
+archivo `.env` no se sube a Git). Sin `MAIL_SERVER`, `python run.py` muestra los
+correos en la terminal.
 
 ## Acceso a SQLite desde Flask
 

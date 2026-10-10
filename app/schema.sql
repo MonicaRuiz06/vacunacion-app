@@ -172,6 +172,22 @@ CREATE TABLE IF NOT EXISTS vacunador_punto (
     PRIMARY KEY (usuario_id, punto_id)
 );
 
+-- Avisos internos (M06): se guardan junto con el cambio que los produce
+-- (por ejemplo, una cancelación) y el correo se intenta después. Si el
+-- correo falla, el aviso se conserva y el personal puede reintentar.
+CREATE TABLE IF NOT EXISTS notificaciones (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    usuario_id INTEGER NOT NULL REFERENCES usuarios(id),
+    cita_id INTEGER REFERENCES citas(id),
+    asunto TEXT NOT NULL,
+    mensaje TEXT NOT NULL,
+    creado_en TEXT NOT NULL,
+    leido_en TEXT,
+    correo_estado TEXT NOT NULL DEFAULT 'pendiente'
+        CHECK (correo_estado IN ('pendiente', 'enviado', 'fallido')),
+    correo_intentos INTEGER NOT NULL DEFAULT 0
+);
+
 -- Historial de cambios importantes (quién, qué y cuándo). Nunca guarda
 -- contraseñas ni enlaces.
 CREATE TABLE IF NOT EXISTS auditoria (

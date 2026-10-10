@@ -246,6 +246,13 @@ dd { margin: 0; overflow-wrap: anywhere; }
 .tarjetas h2 { margin-top: 0; font-size: 18px; }
 .tarjetas p { margin: 0; color: var(--texto-suave); }
 
+/* --- Avisos ------------------------------------------------------------- */
+
+.aviso { padding: 16px 0; border-bottom: 1px solid var(--borde); }
+.aviso h2 { margin: 0 0 6px; font-size: 18px; }
+.aviso p { margin-bottom: 6px; }
+.aviso small { color: var(--texto-suave); }
+
 /* --- Pie ----------------------------------------------------------------- */
 
 .pie { max-width: 1120px; margin: 0 auto; padding: 0 32px 32px; font-size: 13px; color: var(--texto-suave); }

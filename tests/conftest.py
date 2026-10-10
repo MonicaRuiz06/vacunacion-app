@@ -37,8 +37,41 @@ def reloj(monkeypatch):
         return estado["ahora"]
 
     for modulo in ("app.utils", "app.models.usuario", "app.models.auditoria",
-                   "app.models.lote", "app.models.campana", "app.models.inventario"):
+                   "app.models.lote", "app.models.campana", "app.models.inventario",
+                   "app.models.notificacion"):
         monkeypatch.setattr(f"{modulo}.ahora", ahora_fija)
+    return estado
+
+
+@pytest.fixture
+def smtp_falso(app, monkeypatch):
+    """Usa un servidor SMTP falso. estado["falla"] = True simula una caída."""
+    estado = {"enviados": [], "falla": False}
+
+    class SMTPFalso:
+        def __init__(self, servidor, puerto, timeout):
+            if estado["falla"]:
+                raise OSError("Servidor de correo no disponible")
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *error):
+            return False
+
+        def starttls(self):
+            pass
+
+        def login(self, usuario, contrasena):
+            pass
+
+        def send_message(self, mensaje):
+            estado["enviados"].append(mensaje)
+
+    app.config.update(CORREOS_ENVIADOS=None, MAIL_SERVER="smtp.prueba", MAIL_PORT=587,
+                      MAIL_USE_TLS=True, MAIL_USERNAME="equipo", MAIL_PASSWORD="secreto",
+                      MAIL_FROM="vacunacion@example.com")
+    monkeypatch.setattr("app.utils.smtplib.SMTP", SMTPFalso)
     return estado
 
 
