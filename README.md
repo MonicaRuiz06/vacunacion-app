@@ -181,6 +181,13 @@ franja no pueden quedar por debajo de las citas que ya la ocupan.
   nuevas de esa vacuna en ese punto quedan bloqueadas; las citas existentes se
   conservan.
 
+## Citas
+
+El paciente reserva desde una campaña publicada y gestiona sus citas en «Citas»
+(cancelar o reprogramar hasta 2 horas antes). El personal ve la agenda de sus
+puntos, registra la llegada y cierra la atención. Las citas sin llegada pasan a
+«No asistió» 30 minutos después del fin de su franja.
+
 ## Avisos y correo
 
 Cada usuario ve sus avisos en «Avisos». Si un correo falla, el aviso se conserva

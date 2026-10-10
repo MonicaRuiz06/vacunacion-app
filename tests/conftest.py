@@ -7,6 +7,8 @@ import pytest
 from app import create_app
 from app.models.paciente import Paciente
 from app.models.usuario import Usuario
+from app.models.campana import Campana
+from app.models.inventario import registrar_entrada
 from app.utils import ZONA_HORARIA
 
 CONTRASENA = "Clave#123"
@@ -38,7 +40,7 @@ def reloj(monkeypatch):
 
     for modulo in ("app.utils", "app.models.usuario", "app.models.auditoria",
                    "app.models.lote", "app.models.campana", "app.models.inventario",
-                   "app.models.notificacion"):
+                   "app.models.notificacion", "app.models.cita"):
         monkeypatch.setattr(f"{modulo}.ahora", ahora_fija)
     return estado
 
@@ -183,3 +185,40 @@ def ingresar(client, identificacion="1001", contrasena=CONTRASENA, tipo_document
         "identificacion": identificacion,
         "contrasena": contrasena,
     })
+
+
+# --- Escenario de citas (M07) ---------------------------------------------
+
+# Hoy, según el reloj fijo de las pruebas, es 2026-10-08 12:00.
+FRANJA_FECHA = "2026-10-20"
+
+
+def hora(texto):
+    """Fecha y hora en Bogotá a partir de 'YYYY-MM-DD HH:MM[:SS]'."""
+    formato = "%Y-%m-%d %H:%M:%S" if texto.count(":") == 2 else "%Y-%m-%d %H:%M"
+    return datetime.strptime(texto, formato).replace(tzinfo=ZONA_HORARIA)
+
+
+@pytest.fixture
+def esc(app, reloj):
+    """Escenario: campaña publicada con dos puntos, una vacuna con dosis y una franja de 2 cupos."""
+    admin = crear_usuario(app, "administrador")
+    vacunador = crear_usuario(app, "vacunador", identificacion="7001", correo="juan@example.com")
+    campus = crear_punto(app, "Punto Campus")
+    centro = crear_punto(app, "Punto Centro")
+    vacuna = crear_vacuna(app)
+    lote = crear_lote(app, vacuna, fecha_vencimiento="2026-12-31")
+    franja = crear_franja(app, campus, fecha=FRANJA_FECHA, hora_inicio="09:00", hora_fin="09:30", cupos=2)
+    otra_franja = crear_franja(app, campus, fecha=FRANJA_FECHA, hora_inicio="10:00", hora_fin="10:30", cupos=2)
+    franja_centro = crear_franja(app, centro, fecha=FRANJA_FECHA, hora_inicio="09:00", hora_fin="09:30", cupos=2)
+    campana = crear_campana(app, admin, puntos=[campus, centro], vacunas=[vacuna],
+                            fecha_inicio="2026-10-10", fecha_fin="2026-11-30")
+    paciente = crear_paciente(app)
+    with app.app_context():
+        registrar_entrada(campus, lote, 10, "Entrega", admin)
+        registrar_entrada(centro, lote, 10, "Entrega", admin)
+        Campana.buscar(campana).publicar(admin)
+        Usuario.buscar(vacunador).asignar_puntos([campus], admin)
+    return {"admin": admin, "vacunador": vacunador, "campus": campus, "centro": centro,
+            "vacuna": vacuna, "lote": lote, "franja": franja, "otra_franja": otra_franja,
+            "franja_centro": franja_centro, "campana": campana, "paciente": paciente}

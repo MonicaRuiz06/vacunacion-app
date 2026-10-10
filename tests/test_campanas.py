@@ -339,3 +339,33 @@ def test_listar_solo_publicadas(app, admin, base):
         Campana.buscar(base["campana"]).publicar(admin)
         nombres = [campana.nombre for campana in Campana.listar(solo_publicadas=True)]
     assert nombres == ["Jornada de bienestar"]
+
+
+# Fechas al crear (hoy es 2026-10-08 en las pruebas)
+
+
+def test_campana_nueva_no_empieza_antes_de_hoy(app, admin):
+    with app.app_context():
+        with pytest.raises(ErroresFormulario) as error:
+            Campana(nombre="Jornada", descripcion="Ficticia", fecha_inicio="2026-10-07",
+                    fecha_fin="2026-10-20").guardar(admin)
+        assert "fecha_inicio" in error.value.errores
+        Campana(nombre="Jornada", descripcion="Ficticia", fecha_inicio="2026-10-08",
+                fecha_fin="2026-10-08").guardar(admin)
+
+
+def test_campana_nueva_no_termina_antes_de_hoy(app, admin):
+    with app.app_context():
+        with pytest.raises(ErroresFormulario) as error:
+            Campana(nombre="Jornada", descripcion="Ficticia", fecha_inicio="2026-10-01",
+                    fecha_fin="2026-10-05").guardar(admin)
+    assert "fecha_inicio" in error.value.errores
+
+
+def test_campana_que_ya_empezo_se_puede_editar(app, admin, base, reloj):
+    reloj["ahora"] += timedelta(days=5)  # 2026-11-13: ya empezó el 2026-11-10
+    with app.app_context():
+        campana = Campana.buscar(base["campana"])
+        campana.descripcion = "Descripción corregida"
+        campana.guardar(admin)
+        assert Campana.buscar(base["campana"]).descripcion == "Descripción corregida"

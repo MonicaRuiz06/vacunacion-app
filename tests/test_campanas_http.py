@@ -219,3 +219,11 @@ def test_reducir_cupos_por_debajo_de_la_ocupacion(app, client, admin):
     assert client.post(f"/franjas/{franja}/editar", data={"cupos": "2"}).status_code == 303
     with app.app_context():
         assert Franja.buscar(franja).cupos == 2
+
+
+def test_formulario_rechaza_campana_que_empieza_antes_de_hoy(client, admin):
+    respuesta = client.post("/campanas/nueva", data={
+        "nombre": "Jornada pasada", "descripcion": "Ficticia",
+        "fecha_inicio": "2026-10-01", "fecha_fin": "2026-10-20"})
+    assert respuesta.status_code == 400
+    assert 'id="fecha_inicio-error"' in respuesta.get_data(as_text=True)

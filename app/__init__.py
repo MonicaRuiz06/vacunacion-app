@@ -6,7 +6,8 @@ from flask import Flask, render_template
 from flask_wtf.csrf import CSRFError, CSRFProtect
 
 from app import db
-from app.controllers import avisos, campanas, catalogos, cuentas, general, inventario
+from app.controllers import avisos, campanas, catalogos, citas, cuentas, general, inventario
+from app.models.cita import Cita
 from config import Config
 
 
@@ -27,11 +28,14 @@ def create_app(test_config=None):
     app.register_blueprint(campanas.bp)
     app.register_blueprint(inventario.bp)
     app.register_blueprint(avisos.bp)
+    app.register_blueprint(citas.bp)
 
     # El esquema usa CREATE IF NOT EXISTS, así que arrancar la app crea la
     # base inicial una vez y conserva los datos en los siguientes arranques.
     with app.app_context():
         db.init_db()
+        # Al arrancar se cierran las citas vencidas sin llegada (RF-20).
+        Cita.procesar_vencidas()
 
     @app.route("/")
     def inicio():

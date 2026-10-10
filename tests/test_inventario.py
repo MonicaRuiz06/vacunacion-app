@@ -174,7 +174,7 @@ def reservar(app, base, campana, fecha, numero, estado="reservada", usuario_id=N
 @pytest.fixture
 def campana(app, base):
     return crear_campana(app, base["admin"], puntos=[base["punto"]], vacunas=[base["vacuna"]],
-                         fecha_inicio="2026-10-01", fecha_fin="2026-12-31")
+                         fecha_inicio="2026-10-08", fecha_fin="2026-12-31")
 
 
 def disponible(app, base, fecha, excluir=None):

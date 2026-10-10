@@ -10,7 +10,7 @@ Campañas
 {% if g.usuario.rol == "administrador" %}
   <p><a class="boton" href="{{ url_for('campanas.editar') }}">Nueva campaña</a></p>
 {% else %}
-  <p>Campañas de vacunación abiertas. La reserva de citas estará disponible pronto.</p>
+  <p>Campañas de vacunación abiertas. Entra a una campaña para reservar tu cita.</p>
 {% endif %}
 
 <div class="tabla">

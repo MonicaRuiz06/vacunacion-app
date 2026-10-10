@@ -58,6 +58,10 @@ class Campana:
             errores["descripcion"] = "Escribe una descripción (máximo 2000 caracteres)."
         try:
             fecha_requerida(self.fecha_inicio)
+            # Una campaña nueva no puede empezar en el pasado. Al editar no se
+            # exige: una campaña que ya empezó tiene su inicio antes de hoy.
+            if self.id is None and self.fecha_inicio < hoy():
+                errores["fecha_inicio"] = "La fecha de inicio no puede ser anterior a hoy."
         except ValueError:
             errores["fecha_inicio"] = "Escribe una fecha de inicio válida."
         try:
