@@ -37,7 +37,7 @@ def reloj(monkeypatch):
         return estado["ahora"]
 
     for modulo in ("app.utils", "app.models.usuario", "app.models.auditoria",
-                   "app.models.lote", "app.models.campana"):
+                   "app.models.lote", "app.models.campana", "app.models.inventario"):
         monkeypatch.setattr(f"{modulo}.ahora", ahora_fija)
     return estado
 
@@ -98,6 +98,13 @@ def crear_vacuna(app, nombre="Influenza", dosis_requeridas=1):
     with app.app_context():
         vacuna = Vacuna(nombre=nombre, fabricante="Laboratorio Demo", dosis_requeridas=dosis_requeridas)
         return vacuna.guardar()
+
+
+def crear_lote(app, vacuna_id, codigo="L-2041", fecha_vencimiento="2026-11-30"):
+    from app.models.lote import Lote
+
+    with app.app_context():
+        return Lote(vacuna_id=vacuna_id, codigo=codigo, fecha_vencimiento=fecha_vencimiento).guardar()
 
 
 def crear_franja(app, punto_id, fecha="2026-11-14", hora_inicio="09:00", hora_fin="09:30", cupos=5):

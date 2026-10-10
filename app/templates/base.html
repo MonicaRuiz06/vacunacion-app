@@ -47,6 +47,9 @@
       {% block navegacion %}{% endblock %}
       {% if g.usuario %}
         {{ enlace(url_for("campanas.campanas"), "Campañas") }}
+        {% if g.usuario.rol in ("administrador", "vacunador") %}
+          {{ enlace(url_for("inventario.inventario"), "Inventario") }}
+        {% endif %}
         {% if g.usuario.rol == "administrador" %}
           {{ enlace(url_for("campanas.franjas"), "Franjas") }}
           {{ enlace(url_for("catalogos.puntos"), "Puntos") }}

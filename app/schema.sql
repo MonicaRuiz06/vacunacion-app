@@ -98,15 +98,29 @@ CREATE TABLE IF NOT EXISTS franjas (
     cupos INTEGER NOT NULL CHECK (cupos >= 1)
 );
 
--- El inventario es solo un conteo de existencias por punto+vacuna:
--- si se borra el punto o la vacuna, el conteo pierde sentido, por
--- eso aquí SÍ hay ON DELETE CASCADE en ambas llaves foráneas.
+-- Existencias físicas por punto y lote (M05). La vacuna se obtiene del
+-- lote. El saldo nunca es negativo y no se borra en cascada: cada cambio
+-- queda en movimientos_inventario.
 CREATE TABLE IF NOT EXISTS inventarios_biologicos (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    punto_id INTEGER NOT NULL REFERENCES puntos_vacunacion(id) ON DELETE CASCADE,
-    vacuna_id INTEGER NOT NULL REFERENCES vacunas(id) ON DELETE CASCADE,
-    cantidad_disponible INTEGER NOT NULL DEFAULT 0,
-    UNIQUE (punto_id, vacuna_id)
+    punto_id INTEGER NOT NULL REFERENCES puntos_vacunacion(id),
+    lote_id INTEGER NOT NULL REFERENCES lotes(id),
+    cantidad_disponible INTEGER NOT NULL DEFAULT 0 CHECK (cantidad_disponible >= 0),
+    UNIQUE (punto_id, lote_id)
+);
+
+-- Historial de cada cambio de saldo (M05): quién, cuánto, por qué y cuándo.
+-- clave evita registrar dos veces el mismo formulario enviado de nuevo.
+CREATE TABLE IF NOT EXISTS movimientos_inventario (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    inventario_id INTEGER NOT NULL REFERENCES inventarios_biologicos(id),
+    cantidad INTEGER NOT NULL CHECK (cantidad != 0),  -- positiva entra, negativa sale
+    tipo TEXT NOT NULL
+        CHECK (tipo IN ('entrada', 'ajuste', 'aplicacion', 'correccion', 'anulacion')),
+    motivo TEXT NOT NULL,
+    usuario_id INTEGER NOT NULL REFERENCES usuarios(id),
+    fecha TEXT NOT NULL,
+    clave TEXT UNIQUE
 );
 
 -- Citas (formato nuevo desde M04). Punto, fecha y hora salen de la franja.

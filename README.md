@@ -54,8 +54,9 @@ El esquema se mantiene en `app/schema.sql` y se ejecuta con el módulo estándar
   publicada, pausada o finalizada) con sus puntos y vacunas.
 - `franjas`: horarios de atención por punto y fecha; sus cupos se comparten
   entre todas las campañas.
-- `inventarios_biologicos`: existencias por combinación de punto y vacuna
-  (pasará a ser por lote con el módulo de inventario).
+- `inventarios_biologicos`: saldo físico por punto y lote; nunca es negativo.
+- `movimientos_inventario`: cada entrada o ajuste con cantidad, motivo, autor
+  y fecha.
 - `citas`: paciente, campaña, vacuna, franja y estado (reservada, presente,
   aplicada, no aplicada, registro anulado, cancelada o no asistió). Un paciente
   tiene como máximo una cita activa por vacuna.
@@ -164,6 +165,20 @@ Orden sugerido para preparar una campaña:
 
 Los registros no se borran, para conservar el historial. Los cupos de una
 franja no pueden quedar por debajo de las citas que ya la ocupan.
+
+## Inventario
+
+- **Inventario → Registrar entrada** (administrador): punto, lote, cantidad y
+  motivo. La fecha y el autor se guardan solos.
+- **Ajustar** en cada fila (administrador): número positivo para aumentar o
+  negativo para disminuir, siempre con motivo. Se usa también para dar de baja
+  un lote vencido. El saldo nunca queda negativo.
+- **Ver movimientos**: historial de entradas y ajustes con su autor.
+- El vacunador consulta el inventario de sus puntos, sin modificarlo.
+- «Dosis por vacuna» muestra las dosis utilizables (lotes no vencidos), las
+  reservadas por citas activas y el faltante. Si hay faltante, las reservas
+  nuevas de esa vacuna en ese punto quedan bloqueadas; las citas existentes se
+  conservan.
 
 ## Acceso a SQLite desde Flask
 

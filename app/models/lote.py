@@ -58,3 +58,12 @@ class Lote:
             " ORDER BY v.nombre, l.fecha_vencimiento",
             (ahora().date().isoformat(),),
         ).fetchall()
+
+    @staticmethod
+    def opciones():
+        """Lotes para una lista desplegable: «Vacuna · código · vence fecha»."""
+        return get_db().execute(
+            "SELECT l.id, v.nombre || ' · ' || l.codigo || ' · vence ' || l.fecha_vencimiento"
+            " AS nombre FROM lotes l JOIN vacunas v ON v.id = l.vacuna_id"
+            " ORDER BY v.nombre, l.fecha_vencimiento"
+        ).fetchall()
