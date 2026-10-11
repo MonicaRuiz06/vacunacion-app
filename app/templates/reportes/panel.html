@@ -5,8 +5,10 @@
 Panel
 {% endblock %}
 
-{% block contenido %}
-<div class="encabezado-panel">
+{% block clase_contenido %}tablero{% endblock %}
+
+{% block encabezado %}
+<div class="encabezado-banda">
   <div>
     <p class="antetitulo">
       {% if filtros.desde == filtros.hasta %}{{ filtros.desde | fecha_larga or "Todas las fechas" }}{% else %}{{ filtros.desde | fecha_larga or "…" }} a {{ filtros.hasta | fecha_larga or "…" }}{% endif %}
@@ -15,26 +17,10 @@ Panel
   </div>
   <a class="boton" href="{{ url_for('campanas.editar') }}">+ Nueva campaña</a>
 </div>
+{% endblock %}
 
-<form method="get" action="{{ url_for('reportes.panel') }}" class="filtros">
-  <div class="campo"><label for="desde">Desde</label><input id="desde" name="desde" type="date" value="{{ filtros.desde or '' }}"></div>
-  <div class="campo"><label for="hasta">Hasta</label><input id="hasta" name="hasta" type="date" value="{{ filtros.hasta or '' }}"></div>
-  <div class="campo">
-    <label for="campana_id">Campaña</label>
-    <select id="campana_id" name="campana_id">
-      <option value="">Todas</option>
-      {% for campana in campanas %}<option value="{{ campana.id }}" {% if filtros.campana_id == campana.id %}selected{% endif %}>{{ campana.nombre }}</option>{% endfor %}
-    </select>
-  </div>
-  <div class="campo">
-    <label for="punto_id">Punto</label>
-    <select id="punto_id" name="punto_id">
-      <option value="">Todos</option>
-      {% for punto in puntos %}<option value="{{ punto.id }}" {% if filtros.punto_id == punto.id %}selected{% endif %}>{{ punto.nombre }}</option>{% endfor %}
-    </select>
-  </div>
-  <button type="submit">Filtrar</button>
-</form>
+{% block contenido %}
+
 
 <section class="indicadores" aria-label="Indicadores">
   <article class="indicador">
@@ -68,6 +54,28 @@ Panel
     <svg class="icono-indicador" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l10 18H2L12 3z"/><path d="M12 10v5M12 18h.01"/></svg>
   </article>
 </section>
+
+{# Filtros, campañas y próximas franjas comparten una sola tarjeta. #}
+<div class="tarjeta-panel tarjeta-unida">
+<form method="get" action="{{ url_for('reportes.panel') }}" class="filtros">
+  <div class="campo"><label for="desde">Desde</label><input id="desde" name="desde" type="date" value="{{ filtros.desde or '' }}"></div>
+  <div class="campo"><label for="hasta">Hasta</label><input id="hasta" name="hasta" type="date" value="{{ filtros.hasta or '' }}"></div>
+  <div class="campo">
+    <label for="campana_id">Campaña</label>
+    <select id="campana_id" name="campana_id">
+      <option value="">Todas</option>
+      {% for campana in campanas %}<option value="{{ campana.id }}" {% if filtros.campana_id == campana.id %}selected{% endif %}>{{ campana.nombre }}</option>{% endfor %}
+    </select>
+  </div>
+  <div class="campo">
+    <label for="punto_id">Punto</label>
+    <select id="punto_id" name="punto_id">
+      <option value="">Todos</option>
+      {% for punto in puntos %}<option value="{{ punto.id }}" {% if filtros.punto_id == punto.id %}selected{% endif %}>{{ punto.nombre }}</option>{% endfor %}
+    </select>
+  </div>
+  <button type="submit">Filtrar</button>
+</form>
 
 <div class="panel-columnas">
   <section>
@@ -105,15 +113,16 @@ Panel
     {% endfor %}
   </section>
 </div>
+</div>
 
-<section class="seccion">
+<section class="tarjeta-panel">
   <h2>Citas por estado</h2>
   <p class="etiquetas">
     {% for nombre, total in datos.por_estado %}<span class="etiqueta">{{ nombre }}: {{ total }}</span>{% endfor %}
   </p>
 </section>
 
-<section class="seccion">
+<section class="tarjeta-panel">
   <div class="titulo-seccion"><h2>Existencias actuales</h2><small>No dependen del período ni de la campaña.</small></div>
   <div class="tabla">
   <table>
@@ -129,7 +138,7 @@ Panel
   </div>
 </section>
 
-<section class="seccion">
+<section class="tarjeta-panel">
   <h2>Exportar con estos filtros</h2>
   {% set consulta = {"desde": filtros.desde or "", "hasta": filtros.hasta or "", "campana_id": filtros.campana_id or "", "punto_id": filtros.punto_id or ""} %}
   <div class="acciones">

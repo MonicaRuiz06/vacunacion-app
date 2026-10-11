@@ -258,3 +258,22 @@ def test_tipo_de_reporte_desconocido(app, client, esc):
 def test_menu_del_paciente_tiene_historial(app, client, esc):
     ingresar(client)
     assert ">Historial</a>" in client.get("/").get_data(as_text=True)
+
+
+def test_panel_con_encabezado_en_la_banda_y_tarjetas_sueltas(app, client, esc):
+    ingresar(client, identificacion="9001")
+    html = client.get("/panel").get_data(as_text=True)
+    banda = html[html.index('<header class="banda"'):html.index("</header>")]
+    assert "Resumen de la jornada" in banda
+    assert "Nueva campaña" in banda
+    assert '<main id="contenido" class="tablero"' in html
+    assert html.index("</header>") < html.index('class="indicadores"')
+
+
+def test_filtros_campanas_y_franjas_en_una_sola_tarjeta(app, client, esc):
+    ingresar(client, identificacion="9001")
+    html = client.get("/panel").get_data(as_text=True)
+    inicio = html.index('class="tarjeta-panel tarjeta-unida"')
+    tarjeta = html[inicio:html.index('class="tarjeta-panel"', inicio)]
+    for parte in ('name="campana_id"', "Campañas", "Próximas franjas"):
+        assert parte in tarjeta

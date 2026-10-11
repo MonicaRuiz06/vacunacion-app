@@ -394,8 +394,37 @@ dd { margin: 0; overflow-wrap: anywhere; }
 
 /* --- Panel del administrador (diseño G) ---------------------------------- */
 
-.encabezado-panel { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 16px; margin-bottom: 16px; }
-.encabezado-panel h1 { margin: 0; }
+/* Encabezado dentro de la banda azul (título, fecha y acción principal). */
+.encabezado-banda {
+  position: relative;
+  z-index: 1;
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 28px 32px 0;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 16px;
+}
+.encabezado-banda h1 { margin: 0; color: #FFFFFF; }
+.encabezado-banda .antetitulo { color: #BFD4EE; }
+.encabezado-banda .boton { box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2); }
+
+/* Tablero: tarjetas sueltas que se montan sobre la banda (sin hoja blanca). */
+.tablero { position: relative; width: min(1440px, calc(100% - 64px)); margin: -64px auto 40px; }
+.tablero .indicadores { margin-top: 0; }
+.tablero .indicador { background: var(--tarjeta); }
+.tablero .panel-columnas { margin-bottom: 16px; }
+.tablero .panel-columnas > section,
+.tarjeta-panel { background: var(--tarjeta); border: 1px solid var(--borde); border-radius: var(--radio); box-shadow: var(--sombra); }
+.tarjeta-panel { padding: 20px; margin-bottom: 16px; }
+
+/* Tarjeta unida: filtros arriba y, debajo, campañas y franjas sin tarjetas propias. */
+.tarjeta-unida .panel-columnas { margin: 20px 0 0; padding-top: 20px; border-top: 1px solid var(--borde); gap: 0; }
+.tarjeta-unida .panel-columnas > section { padding: 0; border: 0; border-radius: 0; box-shadow: none; background: transparent; }
+.tarjeta-unida .panel-columnas > section + section { padding-left: 20px; margin-left: 20px; border-left: 1px solid var(--borde); }
+.tarjeta-panel h2 { margin-top: 0; }
 .titulo-seccion { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
 .titulo-seccion small { color: var(--texto-suave); }
 
@@ -472,6 +501,9 @@ dd { margin: 0; overflow-wrap: anywhere; }
   .herramientas { gap: 8px; }
   .portada { grid-template-columns: 1fr; }
   .panel-columnas { grid-template-columns: 1fr; }
+  .tarjeta-unida .panel-columnas > section + section { padding: 20px 0 0; margin: 20px 0 0; border-left: 0; border-top: 1px solid var(--borde); }
+  .encabezado-banda { padding: 20px 16px 0; }
+  .tablero { width: calc(100% - 32px); margin-top: -56px; }
   .fila-campana { grid-template-columns: 1fr; }
   .ilustracion { min-height: 220px; }
   .menu { flex-wrap: nowrap; overflow-x: auto; }

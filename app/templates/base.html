@@ -81,9 +81,13 @@
         {{ enlace(url_for("cuentas.registro"), "Crear cuenta") }}
       {% endif %}
     </nav>
+
+    {# Encabezado opcional dentro de la banda (por ejemplo, el del panel). #}
+    {% block encabezado %}{% endblock %}
   </header>
 
-  <main id="contenido" class="hoja">
+  {# "hoja": contenido en una tarjeta blanca. "tablero": tarjetas sueltas sobre la banda. #}
+  <main id="contenido" class="{% block clase_contenido %}hoja{% endblock %}">
     {% for categoria, mensaje in get_flashed_messages(with_categories=true) %}
       <p class="mensaje {{ categoria }}" role="status">{{ mensaje }}</p>
     {% endfor %}
