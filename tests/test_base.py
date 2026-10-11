@@ -5,7 +5,7 @@ import pytest
 from app import create_app
 from app.db import get_db
 from app.models.paciente import Paciente
-from app.utils import ahora, entero_requerido, fecha_requerida, texto_requerido
+from app.utils import ahora, entero_requerido, fecha_requerida, hora_requerida, texto_requerido
 
 TABLAS_INICIALES = {
     "pacientes",
@@ -40,7 +40,7 @@ def test_arrancar_dos_veces_conserva_los_datos(tmp_path):
     app = create_app(config)
     with app.app_context():
         db = get_db()
-        db.execute("INSERT INTO vacunas (nombre, lote, fecha_vencimiento) VALUES ('Influenza', 'L1', '2027-01-01')")
+        db.execute("INSERT INTO vacunas (nombre, dosis_requeridas) VALUES ('Influenza', 1)")
         db.commit()
     app = create_app(config)
     with app.app_context():
@@ -93,3 +93,25 @@ def test_paciente_valida_campos_obligatorios():
     assert Paciente(nombre_completo="Ana", **datos).validar()
     with pytest.raises(ValueError):
         Paciente(nombre_completo="", **datos).validar()
+
+
+def test_fecha_requerida_exige_formato_completo():
+    with pytest.raises(ValueError):
+        fecha_requerida("2026-1-5")
+
+
+@pytest.mark.parametrize("valor", [None, "", "9:00", "24:00", "09:60", "nueve"])
+def test_hora_requerida_rechaza_invalidas(valor):
+    with pytest.raises(ValueError):
+        hora_requerida(valor)
+
+
+def test_hora_requerida_acepta_hh_mm():
+    assert hora_requerida("08:30") == "08:30"
+
+
+def test_fecha_larga_en_espanol():
+    from app.utils import fecha_larga
+
+    assert fecha_larga("2026-11-14") == "sábado 14 de noviembre de 2026"
+    assert fecha_larga(None) == ""

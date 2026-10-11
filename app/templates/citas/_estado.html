@@ -1,0 +1,4 @@
+{# Etiqueta del estado de una cita. #}
+{% from "_formularios.html" import estado %}
+{% set claves = {"reservada": "publicada", "presente": "publicada", "aplicada": "vigente", "no_aplicada": "pausada", "registro_anulado": "pausada", "cancelada": "finalizada", "no_asistio": "finalizada"} %}
+{{ estado(claves[cita.estado], cita.nombre_estado()) }}

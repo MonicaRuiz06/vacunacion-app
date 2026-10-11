@@ -7,8 +7,9 @@ from datetime import timedelta
 
 from werkzeug.security import check_password_hash, generate_password_hash
 
-from app.db import get_db
+from app.db import get_db, transaccion_exclusiva
 from app.models.auditoria import registrar_auditoria
+from app.models.cita import Cita, cancelar_por_cambio, confirmar_cancelacion, motivo_requerido
 from app.utils import ErroresFormulario, ahora
 
 TIPOS_DOCUMENTO = ("CC", "CE", "PASAPORTE")
@@ -93,11 +94,6 @@ def revisar_puntos(puntos_ids):
     return ids
 
 
-def listar_puntos():
-    """Todos los puntos de vacunación (M04 tendrá su propio modelo de puntos)."""
-    return get_db().execute("SELECT id, nombre FROM puntos_vacunacion ORDER BY nombre").fetchall()
-
-
 def resumir_token(token):
     """En la base solo se guarda el hash del enlace, nunca el enlace."""
     return hashlib.sha256(token.encode()).hexdigest()
@@ -127,16 +123,15 @@ def usar_token(token, proposito, contrasena_nueva):
     mensaje = validar_contrasena(contrasena_nueva)
     if mensaje:
         raise ErroresFormulario({"contrasena_nueva": mensaje})
-    db = get_db()
-    fila = db.execute(
-        "SELECT usuario_id FROM tokens_cuenta"
-        " WHERE token_hash = ? AND proposito = ? AND expira_en > ?",
-        (resumir_token(token or ""), proposito, ahora().isoformat()),
-    ).fetchone()
-    usuario = Usuario.buscar(fila["usuario_id"]) if fila else None
-    if usuario is None or not usuario.activo:
-        raise ValueError("El enlace no es válido o ya venció. Solicita uno nuevo.")
-    with db:
+    with transaccion_exclusiva() as db:
+        fila = db.execute(
+            "SELECT usuario_id FROM tokens_cuenta"
+            " WHERE token_hash = ? AND proposito = ? AND expira_en > ?",
+            (resumir_token(token or ""), proposito, ahora().isoformat()),
+        ).fetchone()
+        usuario = Usuario.buscar(fila["usuario_id"]) if fila else None
+        if usuario is None or not usuario.activo:
+            raise ValueError("El enlace no es válido o ya venció. Solicita uno nuevo.")
         usuario.guardar_contrasena(contrasena_nueva)
         registrar_auditoria(usuario.id, "contrasena_establecida", "usuarios", usuario.id,
                             {"medio": proposito})
@@ -236,6 +231,10 @@ class Usuario:
             registrar_auditoria(actor_id, "vacunador_invitado", "usuarios", self.id, {"puntos": ids})
         return token
 
+    def iniciales(self):
+        """Hasta dos iniciales del nombre, para el avatar de la cabecera."""
+        return "".join(palabra[0] for palabra in self.nombre_completo.split()[:2]).upper()
+
     def comprobar_contrasena(self, contrasena):
         return bool(self.password_hash) and check_password_hash(self.password_hash, contrasena or "")
 
@@ -268,6 +267,41 @@ class Usuario:
         with get_db():
             self.guardar_contrasena(nueva)
             registrar_auditoria(self.id, "contrasena_cambiada", "usuarios", self.id)
+
+    def citas_activas(self):
+        """Citas reservadas o con llegada del paciente (las que cancela una desactivación)."""
+        return [cita for cita in Cita.de_paciente(self.id) if cita.estado in ("reservada", "presente")]
+
+    def desactivar(self, actor, motivo, confirmadas):
+        """El administrador desactiva a un paciente (RF-08).
+
+        Cancela sus citas activas con aviso, cierra sus sesiones y conserva su
+        historial. confirmadas son las citas que el administrador revisó.
+        """
+        if actor.rol != "administrador" or self.rol != "paciente":
+            raise PermissionError("Solo el administrador desactiva cuentas de pacientes.")
+        with transaccion_exclusiva():
+            afectadas = [cita.id for cita in self.citas_activas()]
+            confirmar_cancelacion(afectadas, confirmadas, motivo)
+            motivo = motivo_requerido(motivo)  # siempre se pide el motivo
+            get_db().execute("UPDATE usuarios SET activo = 0 WHERE id = ?", (self.id,))
+            self.cerrar_sesiones()
+            registrar_auditoria(actor.id, "cuenta_desactivada", "usuarios", self.id,
+                                {"citas_canceladas": afectadas}, motivo)
+            avisos = cancelar_por_cambio(afectadas, motivo, actor.id)
+        self.activo = 0
+        for aviso in avisos:
+            aviso.enviar()  # el aviso queda en la cuenta aunque ya no pueda ingresar
+
+    def reactivar(self, actor):
+        """Permite ingresar de nuevo sin restaurar citas canceladas (RF-40)."""
+        if actor.rol != "administrador" or self.rol != "paciente":
+            raise PermissionError("Solo el administrador reactiva cuentas de pacientes.")
+        db = get_db()
+        with db:
+            db.execute("UPDATE usuarios SET activo = 1 WHERE id = ?", (self.id,))
+            registrar_auditoria(actor.id, "cuenta_reactivada", "usuarios", self.id)
+        self.activo = 1
 
     def puntos(self):
         """Puntos de vacunación asignados (solo vacunadores)."""

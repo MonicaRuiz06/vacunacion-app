@@ -2,11 +2,25 @@
 
 import os
 
-from flask import Flask, render_template
+from flask import Flask, g, render_template
 from flask_wtf.csrf import CSRFError, CSRFProtect
 
 from app import db
-from app.controllers import cuentas, general
+from app.controllers import (
+    aplicaciones,
+    avisos,
+    campanas,
+    catalogos,
+    citas,
+    cuentas,
+    general,
+    inventario,
+    reportes,
+)
+from app.models.campana import Campana
+from app.models.cita import Cita
+from app.models.punto import Punto
+from app.utils import fecha_larga
 from config import Config
 
 
@@ -20,18 +34,35 @@ def create_app(test_config=None):
     db.init_app(app)
     # Protege todos los formularios POST; las plantillas usan {{ csrf_token() }}.
     CSRFProtect(app)
+    app.add_template_filter(fecha_larga)
 
     app.register_blueprint(cuentas.bp)
     app.register_blueprint(general.bp)
+    app.register_blueprint(catalogos.bp)
+    app.register_blueprint(campanas.bp)
+    app.register_blueprint(inventario.bp)
+    app.register_blueprint(avisos.bp)
+    app.register_blueprint(citas.bp)
+    app.register_blueprint(aplicaciones.bp)
+    app.register_blueprint(reportes.bp)
 
     # El esquema usa CREATE IF NOT EXISTS, así que arrancar la app crea la
     # base inicial una vez y conserva los datos en los siguientes arranques.
     with app.app_context():
         db.init_db()
+        # Al arrancar se cierran las citas vencidas sin llegada (RF-20).
+        Cita.procesar_vencidas()
 
     @app.route("/")
     def inicio():
-        return render_template("index.html")
+        if g.usuario and g.usuario.rol == "administrador":
+            return reportes.panel()  # el panel es el inicio del administrador
+        if g.usuario:
+            return render_template("index.html")  # accesos según el rol
+        # Portada pública con las campañas abiertas y los puntos.
+        Campana.finalizar_vencidas()
+        return render_template("portada.html", campanas=Campana.listar(solo_publicadas=True),
+                               puntos=Punto.listar())
 
     # Páginas de error en español, con la plantilla común.
     @app.errorhandler(400)

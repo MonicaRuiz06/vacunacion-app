@@ -2,6 +2,7 @@
 
 import os
 import sqlite3
+from contextlib import contextmanager
 
 import click
 from flask import current_app, g
@@ -18,6 +19,25 @@ def get_db():
         # solo afecta a la conexión que ejecuta ese script.
         g.db.execute("PRAGMA foreign_keys = ON")
     return g.db
+
+
+@contextmanager
+def transaccion_exclusiva():
+    """Transacción BEGIN IMMEDIATE: solo una escritura a la vez.
+
+    Se usa para revisar y tomar cupos o dosis: si dos personas intentan lo
+    mismo al tiempo, la segunda espera y vuelve a revisar con datos actuales.
+    Confirma al terminar o deshace todo si hay un error.
+    """
+    db = get_db()
+    db.commit()  # cierra cualquier transacción implícita pendiente
+    db.execute("BEGIN IMMEDIATE")
+    try:
+        yield db
+        db.commit()
+    except BaseException:
+        db.rollback()
+        raise
 
 
 def close_db(_error=None):

@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% from "_formularios.html" import csrf_campo, campo %}
+
+{% block titulo %}
+Ajustar existencias
+{% endblock %}
+
+{% block contenido %}
+<h1>Ajustar existencias</h1>
+
+<p>{{ detalle.punto }} · {{ detalle.vacuna }} · lote {{ detalle.lote }} (vence {{ detalle.fecha_vencimiento }})</p>
+<p>Saldo actual: <strong>{{ detalle.cantidad_disponible }}</strong>. Usa un número negativo para disminuir, por ejemplo para dar de baja un lote vencido. El saldo no puede quedar negativo.</p>
+
+<form method="post">
+  {{ csrf_campo() }}
+  <input type="hidden" name="clave" value="{{ clave }}">
+  {{ campo("cantidad", "Cambio (+ aumenta, − disminuye)", valores, errores, tipo="number") }}
+  {{ campo("motivo", "Motivo", valores, errores) }}
+  <button type="submit">Registrar ajuste</button>
+</form>
+
+<p><a href="{{ url_for('inventario.inventario') }}">Volver al inventario</a></p>
+{% endblock %}

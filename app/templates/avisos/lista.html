@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block titulo %}
+Avisos
+{% endblock %}
+
+{% block contenido %}
+<h1>Avisos</h1>
+
+{% if g.usuario.rol in ("administrador", "vacunador") %}
+  <p><a class="boton secundario" href="{{ url_for('avisos.fallidos') }}">Correos fallidos</a></p>
+{% endif %}
+
+{% for aviso in avisos %}
+  <article class="aviso {% if not aviso.leido_en %}nuevo{% endif %}">
+    <h2>{{ aviso.asunto }}{% if not aviso.leido_en %} <span class="estado estado-borrador">Nuevo</span>{% endif %}</h2>
+    <p>{{ aviso.mensaje }}</p>
+    <small>{{ aviso.creado_en[:16] | replace("T", " ") }}</small>
+  </article>
+{% else %}
+  <p>No tienes avisos.</p>
+{% endfor %}
+{% endblock %}

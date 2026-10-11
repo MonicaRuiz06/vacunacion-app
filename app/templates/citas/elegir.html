@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% from "_formularios.html" import csrf_campo, campo, seleccion %}
+
+{% block titulo %}
+{{ titulo }}
+{% endblock %}
+
+{% block contenido %}
+<h1>{{ titulo }}</h1>
+
+{% if cita %}
+  <p>Cita actual: {{ cita.vacuna }} · {{ cita.fecha }} {{ cita.hora_inicio }} · {{ cita.punto }} · {{ cita.campana }}</p>
+  <p>Campaña de destino:
+    {% for opcion in campanas %}
+      <a href="{{ url_for('citas.reprogramar', cita_id=cita.id, campana_id=opcion.id) }}" {% if campana and opcion.id == campana.id %}aria-current="page"{% endif %}>{{ opcion.nombre }}</a>{% if not loop.last %} · {% endif %}
+    {% endfor %}
+  </p>
+{% endif %}
+
+{% if campana %}
+  <h2>{{ campana.nombre }}</h2>
+  <form method="post">
+    {{ csrf_campo() }}
+    <input type="hidden" name="campana_id" value="{{ campana.id }}">
+    {{ seleccion("vacuna_id", "Vacuna", campana.vacunas(), valores, errores) }}
+    {% if franjas %}
+      {{ seleccion("franja_id", "Punto, fecha y hora", franjas, valores, errores) }}
+    {% else %}
+      <p class="mensaje info">No hay franjas disponibles en esta campaña por ahora.</p>
+    {% endif %}
+    {% if cita and g.usuario.rol != "paciente" %}
+      {{ campo("motivo", "Motivo (se envía al paciente)", valores, errores) }}
+    {% endif %}
+    <p><small>Cupos y dosis se confirman al guardar.{% if g.usuario.rol == "paciente" %} Puedes reservar hasta 2 horas antes del inicio.{% endif %}</small></p>
+    <button type="submit" {% if not franjas %}disabled{% endif %}>{{ "Reprogramar" if cita else "Reservar" }}</button>
+  </form>
+{% else %}
+  <p class="mensaje info">Esa campaña no está recibiendo reservas. Elige otra.</p>
+{% endif %}
+
+<p><a href="{{ url_for('citas.citas') }}">Volver a citas</a></p>
+{% endblock %}

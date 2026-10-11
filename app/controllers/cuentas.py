@@ -6,8 +6,10 @@ import click
 from flask import Blueprint, abort, flash, g, redirect, render_template, request, session, url_for
 
 from app.db import get_db
+from app.models.cita import Cita, CitasAfectadas
 from app.models.paciente import Paciente
-from app.models.usuario import Usuario, crear_token, listar_puntos, usar_token
+from app.models.punto import Punto
+from app.models.usuario import Usuario, crear_token, usar_token
 from app.utils import ErroresFormulario, ahora, enviar_correo
 
 bp = Blueprint("cuentas", __name__, cli_group=None)
@@ -279,7 +281,7 @@ def nuevo_vacunador():
             errores = error.errores
             flash(str(error), "error")
     return render_template("cuentas/vacunador.html", valores=request.form, errores=errores,
-                           puntos=listar_puntos(), elegidos=request.form.getlist("puntos")), (
+                           puntos=Punto.listar(), elegidos=request.form.getlist("puntos")), (
         400 if errores else 200
     )
 
@@ -297,7 +299,7 @@ def puntos_vacunador(usuario_id):
             flash(str(error), "error")
     elegidos = [str(punto["id"]) for punto in vacunador.puntos()]
     return render_template("cuentas/puntos.html", vacunador=vacunador,
-                           puntos=listar_puntos(), elegidos=elegidos)
+                           puntos=Punto.listar(), elegidos=elegidos)
 
 
 @bp.route("/usuarios/<int:usuario_id>/invitacion", methods=["POST"])
@@ -313,6 +315,52 @@ def renovar_invitacion(usuario_id):
         flash("Invitación renovada. El enlace anterior ya no sirve.", "exito")
     else:
         flash("No se pudo enviar el correo de invitación.", "error")
+    return redirect(url_for("cuentas.usuarios"), 303)
+
+
+# --- Estado de pacientes (RF-08, RF-40) ----------------------------------------
+
+
+def buscar_paciente(usuario_id):
+    usuario = Usuario.buscar(usuario_id)
+    if usuario is None or usuario.rol != "paciente":
+        abort(404)
+    return usuario
+
+
+@bp.route("/usuarios/<int:usuario_id>/desactivar", methods=["GET", "POST"])
+@rol_requerido("administrador")
+def desactivar(usuario_id):
+    paciente = buscar_paciente(usuario_id)
+    errores, estado = {}, 200
+    citas = paciente.citas_activas()
+    if request.method == "POST":
+        try:
+            paciente.desactivar(g.usuario, request.form.get("motivo"),
+                                request.form.getlist("citas_confirmadas"))
+            flash(f"Cuenta de {paciente.nombre_completo} desactivada.", "exito")
+            return redirect(url_for("cuentas.usuarios"), 303)
+        except CitasAfectadas as error:
+            citas = [Cita.buscar(cita_id) for cita_id in error.ids]
+            estado = 409
+        except ErroresFormulario as error:
+            errores, estado = error.errores, 400
+    return render_template(
+        "citas/confirmar_cancelacion.html", titulo=f"Desactivar a {paciente.nombre_completo}",
+        explicacion="La persona no podrá ingresar y se cerrarán sus sesiones. Sus citas activas "
+                    "se cancelan con aviso; su historial se conserva.",
+        citas=citas, ocultos=[], errores=errores, boton="Desactivar cuenta",
+        accion_url=url_for("cuentas.desactivar", usuario_id=paciente.id),
+        volver=url_for("cuentas.usuarios")), estado
+
+
+@bp.route("/usuarios/<int:usuario_id>/reactivar", methods=["POST"])
+@rol_requerido("administrador")
+def reactivar(usuario_id):
+    paciente = buscar_paciente(usuario_id)
+    paciente.reactivar(g.usuario)
+    flash(f"Cuenta de {paciente.nombre_completo} reactivada. Sus citas canceladas no se restauran.",
+          "exito")
     return redirect(url_for("cuentas.usuarios"), 303)
 
 

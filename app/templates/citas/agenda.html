@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% from "_formularios.html" import csrf_campo %}
+
+{% block titulo %}
+Agenda
+{% endblock %}
+
+{% block contenido %}
+<h1>Agenda de citas</h1>
+
+<p><a class="boton secundario" href="{{ url_for('aplicaciones.listado') }}">Ver aplicaciones registradas</a></p>
+
+<form method="get" class="filtros">
+  <div class="campo">
+    <label for="fecha">Fecha</label>
+    <input id="fecha" name="fecha" type="date" value="{{ filtros.get('fecha', '') }}">
+  </div>
+  <div class="campo">
+    <label for="punto_id">Punto</label>
+    <select id="punto_id" name="punto_id">
+      <option value="">{{ "Todos mis puntos" if g.usuario.rol == "vacunador" else "Todos los puntos" }}</option>
+      {% for punto in puntos %}
+        <option value="{{ punto.id }}" {% if filtros.get("punto_id") == punto.id | string %}selected{% endif %}>{{ punto.nombre }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <button type="submit">Filtrar</button>
+</form>
+
+<div class="tabla">
+<table>
+  <thead><tr><th>Fecha y hora</th><th>Paciente</th><th>Vacuna</th><th>Punto</th><th>Estado</th><th>Acciones</th></tr></thead>
+  <tbody>
+    {% for cita in citas %}
+      <tr>
+        <td>{{ cita.fecha }}<br>{{ cita.hora_inicio }}–{{ cita.hora_fin }}</td>
+        <td>{{ cita.paciente }}<br><small>{{ cita.documento }}</small><br>
+          <a href="{{ url_for('reportes.historial_paciente', paciente_id=cita.paciente_id) }}">Historial</a></td>
+        <td>{{ cita.vacuna }}</td>
+        <td>{{ cita.punto }}</td>
+        <td>{% include "citas/_estado.html" %}</td>
+        <td>
+          {% if cita.llegada_abierta() %}
+            <form method="post" action="{{ url_for('citas.llegada', cita_id=cita.id) }}" class="en-linea">
+              {{ csrf_campo() }}
+              <button type="submit">Registrar llegada</button>
+            </form>
+          {% endif %}
+          {% if cita.estado == "presente" and g.usuario.rol == "vacunador" %}
+            <a href="{{ url_for('citas.aplicar', cita_id=cita.id) }}">Aplicar</a>
+            <a href="{{ url_for('citas.no_aplicada', cita_id=cita.id) }}">No aplicada</a>
+          {% endif %}
+          {% if cita.estado == "reservada" %}
+            <a href="{{ url_for('citas.reprogramar', cita_id=cita.id) }}">Reprogramar</a>
+          {% endif %}
+          {% if cita.estado in ("reservada", "presente") %}
+            <a href="{{ url_for('citas.cancelar', cita_id=cita.id) }}">Cancelar</a>
+          {% endif %}
+        </td>
+      </tr>
+    {% else %}
+      <tr><td colspan="6">No hay citas para estos filtros.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endblock %}

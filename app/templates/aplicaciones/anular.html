@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% from "_formularios.html" import csrf_campo, campo %}
+
+{% block titulo %}
+Anular aplicación
+{% endblock %}
+
+{% block contenido %}
+<h1>Anular aplicación</h1>
+{% include "aplicaciones/_resumen.html" %}
+
+<p>La aplicación deja de contar en el historial y en el esquema. La cita queda como «registro anulado» y sigue ocupando la capacidad del día.</p>
+
+<form method="post">
+  {{ csrf_campo() }}
+  <fieldset>
+    <legend>¿Qué pasó con la dosis?</legend>
+    <label><input type="radio" name="dosis_usada" value="no" {% if valores.get("dosis_usada") != "si" %}checked{% endif %}> No se usó: se repone una unidad al lote</label>
+    <label><input type="radio" name="dosis_usada" value="si" {% if valores.get("dosis_usada") == "si" %}checked{% endif %}> Se usó o se perdió: no se repone</label>
+  </fieldset>
+  {{ campo("motivo", "Motivo", valores, errores) }}
+  <button type="submit">Anular aplicación</button>
+</form>
+
+<p><a href="{{ url_for('aplicaciones.listado') }}">Volver a aplicaciones</a></p>
+{% endblock %}

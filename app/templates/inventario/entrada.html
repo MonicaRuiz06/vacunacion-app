@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% from "_formularios.html" import csrf_campo, campo, seleccion %}
+
+{% block titulo %}
+Registrar entrada
+{% endblock %}
+
+{% block contenido %}
+<h1>Registrar entrada</h1>
+
+<p>Unidades recibidas de un lote en un punto. La fecha y el autor se guardan automáticamente.</p>
+
+<form method="post">
+  {{ csrf_campo() }}
+  <input type="hidden" name="clave" value="{{ clave }}">
+  {{ seleccion("punto_id", "Punto", puntos, valores, errores) }}
+  {{ seleccion("lote_id", "Lote", lotes, valores, errores) }}
+  {{ campo("cantidad", "Cantidad de dosis", valores, errores, tipo="number") }}
+  {{ campo("motivo", "Motivo", valores, errores) }}
+  <button type="submit">Registrar entrada</button>
+</form>
+
+<p><a href="{{ url_for('inventario.inventario') }}">Volver al inventario</a></p>
+{% endblock %}

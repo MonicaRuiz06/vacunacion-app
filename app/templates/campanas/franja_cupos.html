@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% from "_formularios.html" import csrf_campo, campo %}
+
+{% block titulo %}
+Cambiar cupos
+{% endblock %}
+
+{% block contenido %}
+<h1>Cambiar cupos</h1>
+
+<p>{{ punto.nombre }} · {{ franja.fecha }} · {{ franja.hora_inicio }} – {{ franja.hora_fin }}</p>
+<p>Hay {{ ocupados }} cita(s) ocupando cupo. No se puede bajar de ese número; ninguna cita se cancela por este cambio.</p>
+
+<form method="post">
+  {{ csrf_campo() }}
+  {{ campo("cupos", "Cupos", valores, errores, tipo="number") }}
+  <button type="submit">Guardar cupos</button>
+</form>
+
+<p><a href="{{ url_for('campanas.franjas') }}">Volver a franjas</a></p>
+{% endblock %}

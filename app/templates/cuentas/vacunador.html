@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from "_formularios.html" import csrf_campo, campo, documento %}
+{% from "_formularios.html" import csrf_campo, campo, documento, casillas %}
 
 {% block titulo %}
 Invitar vacunador
@@ -15,7 +15,7 @@ Invitar vacunador
   {{ campo("nombre_completo", "Nombre completo", valores, errores) }}
   {{ documento(valores, errores) }}
   {{ campo("correo", "Correo", valores, errores, tipo="email") }}
-  {% include "cuentas/_puntos.html" %}
+  {{ casillas("puntos", "Puntos asignados", puntos, elegidos, errores or {}, vacio="Aún no hay puntos de vacunación registrados.") }}
   <button type="submit">Invitar</button>
 </form>
 

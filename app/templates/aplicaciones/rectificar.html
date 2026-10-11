@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% from "_formularios.html" import csrf_campo, campo, seleccion %}
+
+{% block titulo %}
+Rectificar aplicación
+{% endblock %}
+
+{% block contenido %}
+<h1>Rectificar aplicación</h1>
+{% include "aplicaciones/_resumen.html" %}
+
+<p>Úsalo solo si la dosis se registró al paciente o a la vacuna equivocados. Este registro se anula y se crea el correcto en una cita con llegada y sin aplicación del mismo punto y fecha. Se conserva la fecha real y no se descuenta otra unidad.</p>
+
+{% if citas %}
+  <form method="post">
+    {{ csrf_campo() }}
+    {{ seleccion("cita_id", "Paciente y cita correctos", citas, valores, errores) }}
+    {{ seleccion("lote_id", "Lote realmente aplicado", lotes, valores, errores) }}
+    {{ campo("numero_dosis", "Número de dosis", valores, errores, tipo="number") }}
+    {{ campo("motivo", "Motivo", valores, errores) }}
+    <button type="submit">Rectificar</button>
+  </form>
+{% else %}
+  <p class="mensaje info">No hay citas con llegada y sin aplicación en {{ dosis.punto }} el {{ dosis.fecha_aplicacion }}. Sin una cita existente no se puede rectificar.</p>
+{% endif %}
+
+<p><a href="{{ url_for('aplicaciones.listado') }}">Volver a aplicaciones</a></p>
+{% endblock %}

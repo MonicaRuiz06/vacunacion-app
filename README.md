@@ -47,17 +47,25 @@ El esquema se mantiene en `app/schema.sql` y se ejecuta con el módulo estándar
   en 30 minutos y se usan una vez).
 - `vacunador_punto`: puntos asignados a cada vacunador.
 - `auditoria`: quién cambió qué y cuándo, sin contraseñas.
-- `vacunas`: fabricante, lote, vencimiento y dosis requeridas.
+- `vacunas`: el producto (nombre, fabricante y dosis requeridas).
+- `lotes`: lotes de cada vacuna con su fecha de vencimiento.
 - `puntos_vacunacion`: ubicación, horario y capacidad diaria.
-- `inventarios_biologicos`: existencias por combinación de punto y vacuna.
-- `citas`: paciente, vacuna, punto, fecha, hora y estado.
-- `dosis_aplicadas`: historial de dosis administradas.
+- `campanas`, `campana_puntos`, `campana_vacunas`: campañas (borrador,
+  publicada, pausada o finalizada) con sus puntos y vacunas.
+- `franjas`: horarios de atención por punto y fecha; sus cupos se comparten
+  entre todas las campañas.
+- `inventarios_biologicos`: saldo físico por punto y lote; nunca es negativo.
+- `movimientos_inventario`: cada entrada o ajuste con cantidad, motivo, autor
+  y fecha.
+- `notificaciones`: avisos en la cuenta de cada usuario y el estado de su correo.
+- `citas`: paciente, campaña, vacuna, franja y estado (reservada, presente,
+  aplicada, no aplicada, registro anulado, cancelada o no asistió). Un paciente
+  tiene como máximo una cita activa por vacuna.
+- `dosis_aplicadas`: cada aplicación con su cita, lote real, número de dosis,
+  autor y estado (vigente o anulada).
 
-Inventario tiene una restricción única por punto y vacuna. Las citas y dosis
-se eliminan si se elimina el paciente; los puntos y vacunas referenciados por
-citas o dosis quedan protegidos contra borrado para conservar el historial.
-El inventario sí se elimina junto con su punto o vacuna. Las claves foráneas
-se activan en cada conexión SQLite en `app/db.py`.
+Las citas ya no se borran en cascada: la historia se conserva. Las claves
+foráneas se activan en cada conexión SQLite en `app/db.py`.
 
 ## Cuentas
 
@@ -108,20 +116,16 @@ en el menú.
 El vacunador no se registra solo: el administrador lo invita y le asigna los
 puntos donde trabaja.
 
-1. **Debe existir al menos un punto de vacunación.** Se puede crear uno de prueba
-   con la app detenida:
-
-   ```bash
-   python -c "import sqlite3; db = sqlite3.connect('instance/vacunacion.db'); db.execute(\"INSERT INTO puntos_vacunacion (nombre, direccion, municipio, hora_apertura, hora_cierre) VALUES ('Punto Campus', 'Calle 5 # 62-00', 'Cali', '08:00', '16:00')\"); db.commit(); print('Punto creado')"
-   ```
+1. **Debe existir al menos un punto de vacunación.** Si no hay ninguno, el
+   administrador lo crea en **Puntos → Nuevo punto**.
 
 2. Ejecutar `python run.py`, ingresar como administrador y abrir **Usuarios →
    Invitar vacunador**.
 3. Llenar nombre, documento y correo, marcar uno o más puntos y pulsar
    **Invitar**.
-4. El vacunador recibe un enlace para crear su contraseña. **Mientras el correo
-   no esté configurado, el enlace aparece en la terminal donde
-   corre `python run.py`**, en un bloque como este:
+4. El vacunador recibe un enlace para crear su contraseña. **Si el correo no
+   está configurado, el enlace aparece en la terminal donde corre
+   `python run.py`**, en un bloque como este:
 
    ```text
    --- Correo para juan@example.com: Invitación al sistema de vacunación
@@ -143,7 +147,73 @@ y anula el anterior. Los puntos de un vacunador se cambian con el enlace
 ### Olvidé mi contraseña
 
 En «Ingresar» → «Olvidé mi contraseña». El enlace de recuperación también
-aparece en la terminal mientras el correo no esté configurado.
+aparece en la terminal si el correo no está configurado.
+
+## Catálogos y campañas (administrador)
+
+Orden sugerido para preparar una campaña:
+
+1. **Puntos → Nuevo punto:** nombre, dirección, horario y capacidad diaria.
+2. **Vacunas → Nueva vacuna:** nombre, fabricante y dosis del esquema.
+3. **Lotes → Nuevo lote:** vacuna, código y vencimiento. Un lote sirve hasta su
+   fecha de vencimiento, inclusive.
+4. **Franjas → Nueva franja:** punto, fecha, horario (dentro del horario del
+   punto, sin cruzarse con otra franja) y cupos.
+5. **Campañas → Nueva campaña:** datos, vacunas y puntos. Queda en borrador.
+6. En la campaña, **Publicar**. Se exige al menos un punto, una vacuna y una
+   franja dentro de sus fechas. Luego se puede **Pausar** (no recibe reservas
+   nuevas y conserva las citas) y **Reanudar**. Al pasar su fecha final queda
+   finalizada.
+
+Si un cambio de fechas, puntos o vacunas deja citas activas por fuera, la app
+las lista y pide confirmar con un motivo: se cancelan y cada paciente recibe un
+aviso. En «Usuarios» el administrador puede desactivar a un paciente (cancela
+sus citas activas y cierra sus sesiones) y reactivarlo sin restaurar citas.
+Los registros no se borran, para conservar el historial. Los cupos de una
+franja no pueden quedar por debajo de las citas que ya la ocupan.
+
+## Inventario
+
+- **Inventario → Registrar entrada** (administrador): punto, lote, cantidad y
+  motivo. La fecha y el autor se guardan solos.
+- **Ajustar** en cada fila (administrador): número positivo para aumentar o
+  negativo para disminuir, siempre con motivo. Se usa también para dar de baja
+  un lote vencido. El saldo nunca queda negativo.
+- **Ver movimientos**: historial de entradas y ajustes con su autor.
+- El vacunador consulta el inventario de sus puntos, sin modificarlo.
+- «Dosis por vacuna» muestra las dosis utilizables (lotes no vencidos), las
+  reservadas por citas activas y el faltante. Si hay faltante, las reservas
+  nuevas de esa vacuna en ese punto quedan bloqueadas; las citas existentes se
+  conservan.
+
+## Citas
+
+El paciente reserva desde una campaña publicada y gestiona sus citas en «Citas»
+(cancelar o reprogramar hasta 2 horas antes). El personal ve la agenda de sus
+puntos, registra la llegada y cierra la atención. Las citas sin llegada pasan a
+«No asistió» 30 minutos después del fin de su franja.
+
+## Aplicaciones
+
+Con el paciente presente, el vacunador del punto registra la aplicación desde la
+agenda: elige el lote y el número de dosis, y se descuenta una unidad. En
+«Ver aplicaciones registradas» se corrige el lote o el número (el administrador
+o el autor), y el administrador puede anular o rectificar una aplicación.
+
+## Historial y reportes
+
+El paciente ve su historial en «Historial» y descarga un PDF académico (sin
+validez oficial). El vacunador consulta el historial de los pacientes de sus
+puntos desde la agenda. El inicio del administrador es un panel con filtros por
+fecha, campaña y punto, y exporta citas, aplicaciones e inventario en CSV.
+
+## Avisos y correo
+
+Cada usuario ve sus avisos en «Avisos». Si un correo falla, el aviso se conserva
+y el personal lo reintenta en «Avisos → Correos fallidos». Para enviar correos
+reales, copia `.env.example` como `.env` y completa los datos del correo (el
+archivo `.env` no se sube a Git). Sin `MAIL_SERVER`, `python run.py` muestra los
+correos en la terminal.
 
 ## Acceso a SQLite desde Flask
 
