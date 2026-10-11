@@ -13,6 +13,8 @@ from app.models.paciente import Paciente
 from app.models.usuario import Usuario
 from app.utils import ErroresFormulario
 from tests.conftest import (
+    aplicar,
+    atender,
     FRANJA_FECHA,
     crear_campana,
     crear_franja,
@@ -146,16 +148,11 @@ def test_rf16_una_cita_activa_por_vacuna(app, esc):
     reservar(app, esc, franja=esc["franja_centro"])
 
 
-def test_rf16_esquema_completo_bloquea(app, esc):
-    with app.app_context():
-        db = get_db()
-        paciente_id = Paciente.buscar_por_usuario(esc["paciente"]).id
-        db.execute("INSERT INTO dosis_aplicadas (paciente_id, vacuna_id, punto_id, numero_dosis,"
-                   " fecha_aplicacion) VALUES (?, ?, ?, 1, '2026-09-01')",
-                   (paciente_id, esc["vacuna"], esc["campus"]))
-        db.commit()
+def test_rf16_esquema_completo_bloquea(app, esc, reloj):
+    aplicar(app, esc, atender(app, esc, reloj, esc["paciente"]))  # la vacuna tiene 1 dosis
+    reloj["ahora"] = hora("2026-10-08 12:00")
     with pytest.raises(ValueError, match="todas las dosis"):
-        reservar(app, esc)
+        reservar(app, esc, franja=esc["franja_centro"])
 
 
 # RF-17 — Cancelación por el paciente

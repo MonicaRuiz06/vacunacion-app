@@ -130,8 +130,9 @@ def revisar_destino(paciente_id, campana_id, vacuna_id, franja_id, por_paciente,
         (paciente_id, vacuna_id, excluir),
     ).fetchone():
         raise ValueError("Ya hay una cita activa para esta vacuna.")
-    aplicadas = db.execute(  # En M09 solo contarán las aplicaciones vigentes.
-        "SELECT COUNT(*) FROM dosis_aplicadas WHERE paciente_id = ? AND vacuna_id = ?",
+    aplicadas = db.execute(  # las anuladas no cuentan en el esquema
+        "SELECT COUNT(*) FROM dosis_aplicadas WHERE paciente_id = ? AND vacuna_id = ?"
+        " AND estado = 'vigente'",
         (paciente_id, vacuna_id),
     ).fetchone()[0]
     requeridas = db.execute("SELECT dosis_requeridas FROM vacunas WHERE id = ?", (vacuna_id,)).fetchone()[0]

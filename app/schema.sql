@@ -143,16 +143,23 @@ CREATE TABLE IF NOT EXISTS citas (
     motivo TEXT
 );
 
--- Misma lógica que citas: paciente_id en cascada, vacuna_id y
--- punto_id restringidos (protegen el historial real de aplicación).
+-- Dosis aplicadas (formato nuevo desde M09). Cada aplicación se enlaza a su
+-- cita, al lote real y a quien la registró. Una anulación no borra la fila:
+-- la marca como anulada. rectifica_id apunta a la aplicación errónea que
+-- esta reemplaza (RF-42). Sin borrado en cascada: la historia se conserva.
 CREATE TABLE IF NOT EXISTS dosis_aplicadas (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    paciente_id INTEGER NOT NULL REFERENCES pacientes(id) ON DELETE CASCADE,
+    cita_id INTEGER NOT NULL REFERENCES citas(id),
+    paciente_id INTEGER NOT NULL REFERENCES pacientes(id),
     vacuna_id INTEGER NOT NULL REFERENCES vacunas(id),
     punto_id INTEGER NOT NULL REFERENCES puntos_vacunacion(id),
-    numero_dosis INTEGER NOT NULL DEFAULT 1,
-    fecha_aplicacion TEXT NOT NULL,   -- formato ISO 'YYYY-MM-DD'
-    lote_aplicado TEXT
+    lote_id INTEGER NOT NULL REFERENCES lotes(id),
+    numero_dosis INTEGER NOT NULL CHECK (numero_dosis >= 1),
+    fecha_aplicacion TEXT NOT NULL,   -- formato ISO 'YYYY-MM-DD' (fecha real)
+    registrado_en TEXT NOT NULL,
+    registrado_por INTEGER NOT NULL REFERENCES usuarios(id),
+    estado TEXT NOT NULL DEFAULT 'vigente' CHECK (estado IN ('vigente', 'anulada')),
+    rectifica_id INTEGER REFERENCES dosis_aplicadas(id)
 );
 
 -- Enlaces de recuperación e invitación (M02): se guarda solo el hash,
@@ -207,3 +214,8 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_una_cita_activa ON citas (paciente_id, vac
     WHERE estado IN ('reservada', 'presente');
 CREATE INDEX IF NOT EXISTS idx_franjas_punto_fecha ON franjas (punto_id, fecha);
 CREATE INDEX IF NOT EXISTS idx_dosis_paciente ON dosis_aplicadas (paciente_id);
+-- Una aplicación vigente por cita y por paciente, vacuna y número (RF-28, RF-29).
+CREATE UNIQUE INDEX IF NOT EXISTS idx_una_dosis_por_cita ON dosis_aplicadas (cita_id)
+    WHERE estado = 'vigente';
+CREATE UNIQUE INDEX IF NOT EXISTS idx_una_dosis_por_numero
+    ON dosis_aplicadas (paciente_id, vacuna_id, numero_dosis) WHERE estado = 'vigente';

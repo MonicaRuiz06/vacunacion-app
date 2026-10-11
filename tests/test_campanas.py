@@ -12,6 +12,8 @@ from app.models.punto import Punto
 from app.models.vacuna import Vacuna
 from app.utils import ErroresFormulario
 from tests.conftest import (
+    aplicar,
+    atender,
     crear_campana,
     crear_cita,
     crear_franja,
@@ -87,18 +89,13 @@ def test_rf29_vacuna_exige_dosis_positivas(app, reloj):
     assert "dosis_requeridas" in error.value.errores
 
 
-def test_rf29_no_baja_dosis_por_debajo_de_las_aplicadas(app, reloj):
-    vacuna_id = crear_vacuna(app, dosis_requeridas=3)
-    punto_id = crear_punto(app)
-    usuario_id = crear_paciente(app)
+def test_rf29_no_baja_dosis_por_debajo_de_las_aplicadas(app, esc, reloj):
     with app.app_context():
-        db = get_db()
-        paciente_id = db.execute("SELECT id FROM pacientes WHERE usuario_id = ?", (usuario_id,)).fetchone()[0]
-        db.execute(
-            "INSERT INTO dosis_aplicadas (paciente_id, vacuna_id, punto_id, numero_dosis, fecha_aplicacion)"
-            " VALUES (?, ?, ?, 2, '2026-10-01')", (paciente_id, vacuna_id, punto_id))
-        db.commit()
-        vacuna = Vacuna.buscar(vacuna_id)
+        get_db().execute("UPDATE vacunas SET dosis_requeridas = 3 WHERE id = ?", (esc["vacuna"],))
+        get_db().commit()
+    aplicar(app, esc, atender(app, esc, reloj, esc["paciente"]), numero=2)
+    with app.app_context():
+        vacuna = Vacuna.buscar(esc["vacuna"])
         vacuna.dosis_requeridas = "1"
         with pytest.raises(ErroresFormulario):
             vacuna.guardar()

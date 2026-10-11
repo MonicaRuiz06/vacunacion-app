@@ -108,3 +108,10 @@ def test_hora_requerida_rechaza_invalidas(valor):
 
 def test_hora_requerida_acepta_hh_mm():
     assert hora_requerida("08:30") == "08:30"
+
+
+def test_fecha_larga_en_espanol():
+    from app.utils import fecha_larga
+
+    assert fecha_larga("2026-11-14") == "sábado 14 de noviembre de 2026"
+    assert fecha_larga(None) == ""

@@ -8,13 +8,13 @@ Inicio
 <p class="antetitulo">Sistema de Gestión de Campañas de Vacunación</p>
 <h1>Hola, {{ g.usuario.nombre_completo.split()[0] }}</h1>
 
-{# Accesos rápidos según el rol (los permisos los revisa el servidor). #}
+{# Accesos rápidos según el rol. El administrador ve el panel en lugar de esta página. #}
 {% if g.usuario.rol == "paciente" %}
   {% set accesos = [
     ("campanas.campanas", "Reservar una cita", "Elige campaña, punto y franja disponibles."),
+    ("reportes.mi_historial", "Mi historial", "Tus dosis y el comprobante en PDF."),
     ("citas.citas", "Mis citas", "Cancela o reprograma hasta 2 horas antes."),
     ("avisos.avisos", "Avisos", "Cambios y cancelaciones de tus citas."),
-    ("cuentas.perfil", "Mi perfil", "Tus datos de contacto e identidad."),
   ] %}
 {% elif g.usuario.rol == "vacunador" %}
   {% set accesos = [
@@ -22,13 +22,6 @@ Inicio
     ("inventario.inventario", "Inventario", "Dosis y lotes de tus puntos."),
     ("avisos.avisos", "Avisos", "Avisos y correos fallidos de tus puntos."),
     ("campanas.campanas", "Campañas", "Campañas publicadas."),
-  ] %}
-{% else %}
-  {% set accesos = [
-    ("campanas.campanas", "Campañas", "Crea, publica o pausa campañas."),
-    ("citas.citas", "Agenda", "Citas de todos los puntos."),
-    ("inventario.inventario", "Inventario", "Entradas, ajustes y faltantes."),
-    ("cuentas.usuarios", "Usuarios", "Vacunadores y sus puntos."),
   ] %}
 {% endif %}
 

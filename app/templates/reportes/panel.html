@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+{% from "_formularios.html" import estado %}
+
+{% block titulo %}
+Panel
+{% endblock %}
+
+{% block contenido %}
+<div class="encabezado-panel">
+  <div>
+    <p class="antetitulo">
+      {% if filtros.desde == filtros.hasta %}{{ filtros.desde | fecha_larga or "Todas las fechas" }}{% else %}{{ filtros.desde | fecha_larga or "…" }} a {{ filtros.hasta | fecha_larga or "…" }}{% endif %}
+    </p>
+    <h1>Resumen de la jornada</h1>
+  </div>
+  <a class="boton" href="{{ url_for('campanas.editar') }}">+ Nueva campaña</a>
+</div>
+
+<form method="get" action="{{ url_for('reportes.panel') }}" class="filtros">
+  <div class="campo"><label for="desde">Desde</label><input id="desde" name="desde" type="date" value="{{ filtros.desde or '' }}"></div>
+  <div class="campo"><label for="hasta">Hasta</label><input id="hasta" name="hasta" type="date" value="{{ filtros.hasta or '' }}"></div>
+  <div class="campo">
+    <label for="campana_id">Campaña</label>
+    <select id="campana_id" name="campana_id">
+      <option value="">Todas</option>
+      {% for campana in campanas %}<option value="{{ campana.id }}" {% if filtros.campana_id == campana.id %}selected{% endif %}>{{ campana.nombre }}</option>{% endfor %}
+    </select>
+  </div>
+  <div class="campo">
+    <label for="punto_id">Punto</label>
+    <select id="punto_id" name="punto_id">
+      <option value="">Todos</option>
+      {% for punto in puntos %}<option value="{{ punto.id }}" {% if filtros.punto_id == punto.id %}selected{% endif %}>{{ punto.nombre }}</option>{% endfor %}
+    </select>
+  </div>
+  <button type="submit">Filtrar</button>
+</form>
+
+<section class="indicadores" aria-label="Indicadores">
+  <article class="indicador">
+    <div>
+      <p>Citas del período</p>
+      <strong data-total="citas">{{ datos.total_citas }}</strong>
+      <small>{{ datos.presentes }} paciente{{ "s" if datos.presentes != 1 }} presente{{ "s" if datos.presentes != 1 }}</small>
+    </div>
+    <svg class="icono-indicador" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>
+  </article>
+  <article class="indicador">
+    <div>
+      <p>Dosis aplicadas</p>
+      <strong data-total="aplicadas">{{ datos.aplicadas }}</strong>
+      <small>{{ datos.porcentaje }} % de las citas atendidas</small>
+    </div>
+    <span class="anillo" style="--avance: {{ datos.porcentaje }}%" aria-hidden="true">{{ datos.porcentaje }}%</span>
+  </article>
+  <article class="indicador {% if datos.faltantes %}alerta{% endif %}">
+    <div>
+      <p>Alerta de inventario</p>
+      {% if datos.faltantes %}
+        {% set primero = datos.faltantes[0] %}
+        <strong class="texto-alerta">{{ primero.vacuna }}</strong>
+        <small>Faltan {{ primero.faltante }} dosis · {{ primero.punto }}{% if datos.faltantes | length > 1 %} (y {{ datos.faltantes | length - 1 }} más){% endif %}</small>
+      {% else %}
+        <strong class="texto-alerta">Sin faltantes</strong>
+        <small>Las reservas tienen dosis disponibles.</small>
+      {% endif %}
+    </div>
+    <svg class="icono-indicador" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l10 18H2L12 3z"/><path d="M12 10v5M12 18h.01"/></svg>
+  </article>
+</section>
+
+<div class="panel-columnas">
+  <section>
+    <div class="titulo-seccion"><h2>Campañas</h2><a href="{{ url_for('campanas.campanas') }}">Ver todas</a></div>
+    {% for campana in datos.campanas %}
+      <a class="fila-campana estado-borde-{{ campana.estado }}" href="{{ url_for('campanas.detalle', campana_id=campana.id) }}">
+        <span>
+          <strong>{{ campana.nombre }}</strong>
+          <small>{{ campana.fechas }} · {{ campana.vacunas or "sin vacunas" }} · {{ campana.puntos }} punto{{ "s" if campana.puntos != 1 }}</small>
+        </span>
+        <span class="ocupacion">
+          {% if campana.cupos %}
+            <span class="barra"><span style="width: {{ campana.porcentaje }}%"></span></span>
+            <small>{{ campana.ocupadas }} / {{ campana.cupos }} cupos</small>
+          {% else %}
+            <small>Sin franjas configuradas</small>
+          {% endif %}
+        </span>
+        {{ estado(campana.estado, {"borrador": "Borrador", "publicada": "Publicada", "pausada": "Pausada", "finalizada": "Finalizada"}[campana.estado]) }}
+      </a>
+    {% else %}
+      <p class="mensaje info">Aún no hay campañas.</p>
+    {% endfor %}
+  </section>
+
+  <section>
+    <h2>Próximas franjas</h2>
+    {% for franja in datos.proximas %}
+      <div class="franja-proxima">
+        <strong>{{ franja.hora_inicio }}</strong>
+        <span><strong>{{ franja.punto }}</strong><small>{{ franja.fecha }} · {{ franja.libres }} de {{ franja.cupos }} cupos libres</small></span>
+      </div>
+    {% else %}
+      <p class="mensaje info">No hay franjas próximas.</p>
+    {% endfor %}
+  </section>
+</div>
+
+<section class="seccion">
+  <h2>Citas por estado</h2>
+  <p class="etiquetas">
+    {% for nombre, total in datos.por_estado %}<span class="etiqueta">{{ nombre }}: {{ total }}</span>{% endfor %}
+  </p>
+</section>
+
+<section class="seccion">
+  <div class="titulo-seccion"><h2>Existencias actuales</h2><small>No dependen del período ni de la campaña.</small></div>
+  <div class="tabla">
+  <table>
+    <thead><tr><th>Punto</th><th>Vacuna</th><th>Lote</th><th>Vence</th><th>Saldo físico</th></tr></thead>
+    <tbody>
+      {% for fila in datos.existencias %}
+        <tr><td>{{ fila.punto }}</td><td>{{ fila.vacuna }}</td><td>{{ fila.lote }}</td><td>{{ fila.fecha_vencimiento }}{% if fila.vencido %} · vencido{% endif %}</td><td>{{ fila.cantidad_disponible }}</td></tr>
+      {% else %}
+        <tr><td colspan="5">Sin existencias registradas.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<section class="seccion">
+  <h2>Exportar con estos filtros</h2>
+  {% set consulta = {"desde": filtros.desde or "", "hasta": filtros.hasta or "", "campana_id": filtros.campana_id or "", "punto_id": filtros.punto_id or ""} %}
+  <div class="acciones">
+    <a class="boton secundario" href="{{ url_for('reportes.exportar', tipo='citas', **consulta) }}">Citas (CSV)</a>
+    <a class="boton secundario" href="{{ url_for('reportes.exportar', tipo='aplicaciones', **consulta) }}">Aplicaciones (CSV)</a>
+    <a class="boton secundario" href="{{ url_for('reportes.exportar', tipo='inventario', punto_id=filtros.punto_id or '') }}">Inventario (CSV)</a>
+  </div>
+</section>
+{% endblock %}

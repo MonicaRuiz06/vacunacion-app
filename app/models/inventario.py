@@ -61,6 +61,38 @@ def registrar_entrada(punto_id, lote_id, cantidad, motivo, usuario_id, clave=Non
     return inventario.id
 
 
+def mover_saldo(inventario_id, cantidad, tipo, motivo, usuario_id, clave=None):
+    """Suma o resta unidades y registra el movimiento. No hace commit.
+
+    El UPDATE solo se aplica si el saldo no queda negativo, así dos cambios
+    simultáneos no pueden gastar la misma unidad (RNF-06).
+    """
+    db = get_db()
+    cambiado = db.execute(
+        "UPDATE inventarios_biologicos SET cantidad_disponible = cantidad_disponible + ?"
+        " WHERE id = ? AND cantidad_disponible + ? >= 0",
+        (cantidad, inventario_id, cantidad),
+    ).rowcount
+    if not cambiado:
+        raise ErroresFormulario({"cantidad": "El saldo no puede quedar negativo."})
+    db.execute(
+        "INSERT INTO movimientos_inventario (inventario_id, cantidad, tipo, motivo,"
+        " usuario_id, fecha, clave) VALUES (?, ?, ?, ?, ?, ?, ?)",
+        (inventario_id, cantidad, tipo, motivo, usuario_id, ahora().isoformat(), clave),
+    )
+
+
+def mover_lote(punto_id, lote_id, cantidad, tipo, motivo, usuario_id):
+    """mover_saldo() buscando el inventario por punto y lote. No hace commit."""
+    fila = get_db().execute(
+        "SELECT id FROM inventarios_biologicos WHERE punto_id = ? AND lote_id = ?",
+        (punto_id, lote_id),
+    ).fetchone()
+    if fila is None:
+        raise ValueError("Ese lote no tiene existencias registradas en este punto.")
+    mover_saldo(fila["id"], cantidad, tipo, motivo, usuario_id)
+
+
 class Inventario:
     def __init__(self, id=None, punto_id=None, lote_id=None, cantidad_disponible=0):
         self.id = id
@@ -69,26 +101,11 @@ class Inventario:
         self.cantidad_disponible = cantidad_disponible
 
     def mover(self, cantidad, tipo, motivo, usuario_id, clave=None):
-        """Cambia el saldo y guarda el movimiento en una sola transacción.
-
-        El UPDATE solo se aplica si el saldo no queda negativo, así dos cambios
-        simultáneos no pueden gastar la misma unidad (RNF-06).
-        """
+        """Cambia el saldo y guarda el movimiento en una sola transacción."""
         db = get_db()
         try:
             with db:
-                cambiado = db.execute(
-                    "UPDATE inventarios_biologicos SET cantidad_disponible = cantidad_disponible + ?"
-                    " WHERE id = ? AND cantidad_disponible + ? >= 0",
-                    (cantidad, self.id, cantidad),
-                ).rowcount
-                if not cambiado:
-                    raise ErroresFormulario({"cantidad": "El saldo no puede quedar negativo."})
-                db.execute(
-                    "INSERT INTO movimientos_inventario (inventario_id, cantidad, tipo, motivo,"
-                    " usuario_id, fecha, clave) VALUES (?, ?, ?, ?, ?, ?, ?)",
-                    (self.id, cantidad, tipo, motivo, usuario_id, ahora().isoformat(), clave),
-                )
+                mover_saldo(self.id, cantidad, tipo, motivo, usuario_id, clave)
         except sqlite3.IntegrityError:
             if clave and db.execute(
                 "SELECT 1 FROM movimientos_inventario WHERE clave = ?", (clave,)

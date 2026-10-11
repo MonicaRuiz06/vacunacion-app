@@ -5,8 +5,9 @@ from flask import Blueprint, abort, flash, g, redirect, render_template, request
 from app.controllers.cuentas import rol_requerido
 from app.models.campana import Campana
 from app.models.cita import Cita, preparar
+from app.models.dosis import DosisAplicada
 from app.models.punto import Punto
-from app.utils import ErroresFormulario
+from app.utils import ErroresFormulario, ahora
 
 bp = Blueprint("citas", __name__)
 
@@ -149,3 +150,30 @@ def no_aplicada(cita_id):
             return redirect(url_for("citas.citas"), 303)
     return render_template("citas/motivo.html", cita=cita, accion="no_aplicada",
                            pedir_motivo=True, errores=errores), estado
+
+
+@bp.route("/citas/<int:cita_id>/aplicar", methods=["GET", "POST"])
+@rol_requerido("vacunador")
+def aplicar(cita_id):
+    cita = buscar_cita(cita_id)
+    exigir_acceso(cita)
+    errores, estado = {}, 200
+    if request.method == "POST":
+        try:
+            DosisAplicada.registrar(cita.id, g.usuario, request.form.get("lote_id"),
+                                    request.form.get("numero_dosis"))
+            flash(f"Aplicación registrada: {cita.paciente}, {cita.vacuna}.", "exito")
+            return redirect(url_for("citas.citas", fecha=cita.fecha), 303)
+        except PermissionError:
+            abort(403)
+        except ErroresFormulario as error:
+            errores, estado = error.errores, 400
+            flash(str(error), "error")
+        except ValueError as error:
+            flash(str(error), "error")
+            estado = 409
+    valores = request.form if request.method == "POST" else {
+        "numero_dosis": DosisAplicada.siguiente_numero(cita.paciente_id, cita.vacuna_id)}
+    return render_template(
+        "citas/aplicar.html", cita=cita, valores=valores, errores=errores,
+        lotes=DosisAplicada.lotes_para(cita.punto_id, cita.vacuna_id, ahora().date().isoformat())), estado

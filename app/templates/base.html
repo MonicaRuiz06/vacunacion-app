@@ -62,6 +62,9 @@
       {% if g.usuario %}
         {{ enlace(url_for("campanas.campanas"), "Campañas") }}
         {{ enlace(url_for("citas.citas"), "Citas") }}
+        {% if g.usuario.rol == "paciente" %}
+          {{ enlace(url_for("reportes.mi_historial"), "Historial") }}
+        {% endif %}
         {% if g.usuario.rol in ("administrador", "vacunador") %}
           {{ enlace(url_for("inventario.inventario"), "Inventario") }}
         {% endif %}

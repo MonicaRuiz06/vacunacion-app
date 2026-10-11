@@ -9,6 +9,8 @@ from app.models.franja import Franja
 from app.models.usuario import Usuario
 from app.utils import ErroresFormulario
 from tests.conftest import (
+    aplicar,
+    atender,
     FRANJA_FECHA,
     CONTRASENA,
     crear_paciente,
@@ -139,12 +141,13 @@ def test_rf08_desactivar_muestra_las_citas_que_se_cancelan(app, esc):
 
 
 def test_rf08_desactivar_cancela_avisa_y_cierra_sesiones(app, esc, reloj):
-    reservada = reservar(app, esc, esc["paciente"])
     with app.app_context():
-        get_db().execute("INSERT INTO dosis_aplicadas (paciente_id, vacuna_id, punto_id, numero_dosis,"
-                         " fecha_aplicacion) SELECT id, ?, ?, 1, '2026-09-01' FROM pacientes"
-                         " WHERE usuario_id = ?", (esc["vacuna"], esc["campus"], esc["paciente"]))
+        get_db().execute("UPDATE vacunas SET dosis_requeridas = 2 WHERE id = ?", (esc["vacuna"],))
         get_db().commit()
+    aplicar(app, esc, atender(app, esc, reloj, esc["paciente"]))  # dosis 1 aplicada
+    reloj["ahora"] = hora("2026-10-08 12:00")
+    reservada = reservar(app, esc, esc["paciente"], franja=esc["franja_centro"])  # dosis 2
+    with app.app_context():
         Usuario.buscar(esc["paciente"]).desactivar(Usuario.buscar(esc["admin"]),
                                                    "Datos duplicados", [reservada])
         paciente = Usuario.buscar(esc["paciente"])

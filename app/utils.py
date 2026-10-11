@@ -54,6 +54,19 @@ def entero_requerido(valor):
         raise ValueError("Debe ingresar un numero entero.")
 
 
+DIAS = ("lunes", "martes", "miércoles", "jueves", "viernes", "sábado", "domingo")
+MESES = ("enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto",
+         "septiembre", "octubre", "noviembre", "diciembre")
+
+
+def fecha_larga(fecha_iso):
+    """'2026-11-14' -> 'sábado 14 de noviembre de 2026' (filtro de plantilla)."""
+    if not fecha_iso:
+        return ""
+    fecha = datetime.strptime(fecha_iso, "%Y-%m-%d")
+    return f"{DIAS[fecha.weekday()]} {fecha.day} de {MESES[fecha.month - 1]} de {fecha.year}"
+
+
 class ErroresFormulario(ValueError):
     """Errores de validación de un formulario: {"campo": "mensaje"}."""
 

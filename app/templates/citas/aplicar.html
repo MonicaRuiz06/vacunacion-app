@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% from "_formularios.html" import csrf_campo, campo, seleccion %}
+
+{% block titulo %}
+Registrar aplicación
+{% endblock %}
+
+{% block contenido %}
+<h1>Registrar aplicación</h1>
+
+<p>{{ cita.paciente }} ({{ cita.documento }}) · {{ cita.vacuna }} · {{ cita.punto }} · {{ cita.fecha }} {{ cita.hora_inicio }}</p>
+<p>Elige el lote que vas a aplicar. Al guardar se descuenta una unidad de ese lote y la cita queda como aplicada; la fecha y la hora las pone el sistema.</p>
+
+<form method="post">
+  {{ csrf_campo() }}
+  {% if lotes %}
+    {{ seleccion("lote_id", "Lote", lotes, valores, errores) }}
+  {% else %}
+    <p class="mensaje error">No hay lotes vigentes con existencias de esta vacuna en este punto.</p>
+  {% endif %}
+  {{ campo("numero_dosis", "Número de dosis", valores, errores, tipo="number") }}
+  <button type="submit" {% if not lotes %}disabled{% endif %}>Registrar aplicación</button>
+</form>
+
+<p><a href="{{ url_for('citas.citas', fecha=cita.fecha) }}">Volver a la agenda</a></p>
+{% endblock %}

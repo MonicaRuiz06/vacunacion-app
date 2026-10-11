@@ -61,7 +61,8 @@ El esquema se mantiene en `app/schema.sql` y se ejecuta con el módulo estándar
 - `citas`: paciente, campaña, vacuna, franja y estado (reservada, presente,
   aplicada, no aplicada, registro anulado, cancelada o no asistió). Un paciente
   tiene como máximo una cita activa por vacuna.
-- `dosis_aplicadas`: historial de dosis administradas.
+- `dosis_aplicadas`: cada aplicación con su cita, lote real, número de dosis,
+  autor y estado (vigente o anulada).
 
 Las citas ya no se borran en cascada: la historia se conserva. Las claves
 foráneas se activan en cada conexión SQLite en `app/db.py`.
@@ -191,6 +192,20 @@ El paciente reserva desde una campaña publicada y gestiona sus citas en «Citas
 (cancelar o reprogramar hasta 2 horas antes). El personal ve la agenda de sus
 puntos, registra la llegada y cierra la atención. Las citas sin llegada pasan a
 «No asistió» 30 minutos después del fin de su franja.
+
+## Aplicaciones
+
+Con el paciente presente, el vacunador del punto registra la aplicación desde la
+agenda: elige el lote y el número de dosis, y se descuenta una unidad. En
+«Ver aplicaciones registradas» se corrige el lote o el número (el administrador
+o el autor), y el administrador puede anular o rectificar una aplicación.
+
+## Historial y reportes
+
+El paciente ve su historial en «Historial» y descarga un PDF académico (sin
+validez oficial). El vacunador consulta el historial de los pacientes de sus
+puntos desde la agenda. El inicio del administrador es un panel con filtros por
+fecha, campaña y punto, y exporta citas, aplicaciones e inventario en CSV.
 
 ## Avisos y correo
 

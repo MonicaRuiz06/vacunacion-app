@@ -1,6 +1,6 @@
 """Configuración común de pruebas: cada prueba usa una base temporal."""
 
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import pytest
 
@@ -40,7 +40,8 @@ def reloj(monkeypatch):
 
     for modulo in ("app.utils", "app.models.usuario", "app.models.auditoria",
                    "app.models.lote", "app.models.campana", "app.models.inventario",
-                   "app.models.notificacion", "app.models.cita"):
+                   "app.models.notificacion", "app.models.cita", "app.models.dosis",
+                   "app.models.reporte"):
         monkeypatch.setattr(f"{modulo}.ahora", ahora_fija)
     return estado
 
@@ -222,3 +223,29 @@ def esc(app, reloj):
     return {"admin": admin, "vacunador": vacunador, "campus": campus, "centro": centro,
             "vacuna": vacuna, "lote": lote, "franja": franja, "otra_franja": otra_franja,
             "franja_centro": franja_centro, "campana": campana, "paciente": paciente}
+
+
+def atender(app, esc, reloj, usuario_id, franja_id=None):
+    """Reserva (con el reloj en 2026-10-08) y registra la llegada 10 minutos
+    después del inicio de la franja. Deja el reloj en esa hora."""
+    from app.models.cita import Cita
+    from app.models.franja import Franja
+
+    franja_id = franja_id or esc["franja"]
+    reloj["ahora"] = datetime(2026, 10, 8, 12, 0, tzinfo=ZONA_HORARIA)
+    with app.app_context():
+        cita_id = Cita.reservar(Usuario.buscar(usuario_id), esc["campana"], esc["vacuna"], franja_id)
+        franja = Franja.buscar(franja_id)
+    reloj["ahora"] = hora(f"{franja.fecha} {franja.hora_inicio}") + timedelta(minutes=10)
+    with app.app_context():
+        Cita.buscar(cita_id).registrar_llegada(Usuario.buscar(esc["vacunador"]))
+    return cita_id
+
+
+def aplicar(app, esc, cita_id, numero=1, lote_id=None, usuario_id=None):
+    """Registra la aplicación por el vacunador del escenario."""
+    from app.models.dosis import DosisAplicada
+
+    with app.app_context():
+        return DosisAplicada.registrar(cita_id, Usuario.buscar(usuario_id or esc["vacunador"]),
+                                       lote_id or esc["lote"], numero)

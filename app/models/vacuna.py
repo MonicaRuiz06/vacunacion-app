@@ -43,7 +43,8 @@ class Vacuna:
         else:
             # Las dosis no pueden quedar por debajo de las ya aplicadas (RF-29).
             mayor = db.execute(
-                "SELECT MAX(numero_dosis) FROM dosis_aplicadas WHERE vacuna_id = ?", (self.id,)
+                "SELECT MAX(numero_dosis) FROM dosis_aplicadas WHERE vacuna_id = ?"
+                " AND estado = 'vigente'", (self.id,)
             ).fetchone()[0]
             if mayor and self.dosis_requeridas < mayor:
                 raise ErroresFormulario({

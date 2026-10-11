@@ -349,7 +349,7 @@ dd { margin: 0; overflow-wrap: anywhere; }
 .tarjeta-cita strong { font-size: 20px; }
 .tarjeta-cita small { color: var(--texto-suave); }
 .tarjeta-cita .estado { align-self: flex-start; }
-.barra { height: 8px; border-radius: 4px; background: var(--fondo); overflow: hidden; }
+.barra { display: block; height: 8px; border-radius: 4px; background: var(--fondo); overflow: hidden; }
 .barra span { display: block; width: 70%; height: 100%; background: var(--accion); }
 
 .seccion { margin-top: 40px; }
@@ -392,6 +392,68 @@ dd { margin: 0; overflow-wrap: anywhere; }
 .aviso p { margin-bottom: 6px; }
 .aviso small { color: var(--texto-suave); }
 
+/* --- Panel del administrador (diseño G) ---------------------------------- */
+
+.encabezado-panel { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 16px; margin-bottom: 16px; }
+.encabezado-panel h1 { margin: 0; }
+.titulo-seccion { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.titulo-seccion small { color: var(--texto-suave); }
+
+.indicadores { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; margin: 24px 0; }
+.indicador {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 20px;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  box-shadow: var(--sombra);
+}
+.indicador p { margin: 0; color: var(--texto-suave); font-size: 14px; }
+.indicador strong { display: block; font-size: 34px; font-weight: 800; line-height: 1.2; }
+.indicador small { color: var(--texto-suave); }
+.indicador.alerta { border-left: 6px solid var(--alerta-texto); }
+.indicador.alerta small, .indicador.alerta .texto-alerta { color: var(--alerta-texto); }
+.texto-alerta { font-size: 22px !important; }
+.icono-indicador { flex: none; width: 52px; height: 52px; padding: 13px; border-radius: 14px; background: var(--info-fondo); color: var(--info-texto); fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.indicador.alerta .icono-indicador { background: var(--alerta-fondo); color: var(--alerta-texto); }
+.anillo {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: radial-gradient(var(--tarjeta) 56%, transparent 57%), conic-gradient(var(--accion) var(--avance), var(--exito-fondo) 0);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.panel-columnas { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: 16px; }
+.panel-columnas > section { padding: 20px; border: 1px solid var(--borde); border-radius: var(--radio); }
+.panel-columnas h2 { margin-top: 0; }
+.fila-campana {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(120px, 180px) auto;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 0 12px 14px;
+  border-top: 1px solid var(--borde);
+  border-left: 6px solid var(--borde);
+  color: var(--texto);
+  text-decoration: none;
+}
+.fila-campana:hover { background: var(--fondo); }
+.fila-campana small { display: block; color: var(--texto-suave); }
+.estado-borde-publicada { border-left-color: var(--accion); }
+.estado-borde-pausada { border-left-color: var(--alerta-texto); }
+.ocupacion .barra span { background: var(--banda); }
+.franja-proxima { display: flex; gap: 12px; padding: 10px 0; }
+.franja-proxima > strong { width: 52px; color: var(--enlace); }
+.franja-proxima span { border-left: 3px solid var(--diagonal); padding-left: 10px; }
+.franja-proxima small { display: block; color: var(--texto-suave); }
+
 /* --- Pie ----------------------------------------------------------------- */
 
 .pie { max-width: 1440px; margin: 0 auto; padding: 0 32px 32px; font-size: 13px; color: var(--texto-suave); }
@@ -409,6 +471,8 @@ dd { margin: 0; overflow-wrap: anywhere; }
   .logo { width: 40px; height: 40px; border-radius: 11px; }
   .herramientas { gap: 8px; }
   .portada { grid-template-columns: 1fr; }
+  .panel-columnas { grid-template-columns: 1fr; }
+  .fila-campana { grid-template-columns: 1fr; }
   .ilustracion { min-height: 220px; }
   .menu { flex-wrap: nowrap; overflow-x: auto; }
   .menu a { white-space: nowrap; }

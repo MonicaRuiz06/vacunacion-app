@@ -86,10 +86,10 @@ def test_inicio_del_paciente(app, client, reloj):
     assert "Inventario" not in html
 
 
-def test_inicio_del_administrador(app, client, reloj):
+def test_inicio_del_administrador_es_el_panel(app, client, reloj):
     crear_usuario(app, "administrador")
     ingresar(client, identificacion="9001")
     html = client.get("/").get_data(as_text=True)
-    assert "Hola, Ana" in html
-    for acceso in ("Campañas", "Agenda", "Inventario", "Usuarios"):
+    assert "Resumen de la jornada" in html
+    for acceso in ("Nueva campaña", "Próximas franjas", "Exportar con estos filtros"):
         assert acceso in html
