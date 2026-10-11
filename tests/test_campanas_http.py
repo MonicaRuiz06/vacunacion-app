@@ -163,7 +163,8 @@ def test_editar_campana_que_afecta_citas_muestra_error(app, client, admin):
         "nombre": "Jornada de bienestar", "descripcion": "Campaña ficticia",
         "fecha_inicio": "2026-11-10", "fecha_fin": "2026-11-20",
         "puntos": [str(punto)], "vacunas": [str(otra)]})
-    assert respuesta.status_code == 400
+    # Desde M08 se muestra la confirmación con las citas afectadas.
+    assert respuesta.status_code == 409
     assert "cita" in respuesta.get_data(as_text=True)
 
 

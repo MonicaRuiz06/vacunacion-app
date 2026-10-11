@@ -164,6 +164,10 @@ Orden sugerido para preparar una campaña:
    nuevas y conserva las citas) y **Reanudar**. Al pasar su fecha final queda
    finalizada.
 
+Si un cambio de fechas, puntos o vacunas deja citas activas por fuera, la app
+las lista y pide confirmar con un motivo: se cancelan y cada paciente recibe un
+aviso. En «Usuarios» el administrador puede desactivar a un paciente (cancela
+sus citas activas y cierra sus sesiones) y reactivarlo sin restaurar citas.
 Los registros no se borran, para conservar el historial. Los cupos de una
 franja no pueden quedar por debajo de las citas que ya la ocupan.
 

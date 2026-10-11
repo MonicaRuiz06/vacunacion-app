@@ -29,6 +29,42 @@ NOMBRES_ESTADO = {
 MARCAS_OCUPAN = ", ".join("?" for _ in ESTADOS_QUE_OCUPAN)
 
 
+class CitasAfectadas(ValueError):
+    """Un cambio dejaría citas activas por fuera: hay que confirmarlo con motivo.
+
+    ids son las citas que se cancelarían; la confirmación debe traer exactamente
+    esas, para que nadie cancele citas que no vio (RF-08, RF-13).
+    """
+
+    def __init__(self, ids):
+        super().__init__(f"Este cambio cancela {len(ids)} cita(s). Revisa y confirma con un motivo.")
+        self.ids = ids
+
+
+def confirmar_cancelacion(ids, confirmadas, motivo):
+    """Revisa la confirmación de una cancelación masiva y devuelve el motivo limpio."""
+    vistas = sorted(int(cita_id) for cita_id in confirmadas or [] if str(cita_id).isdigit())
+    if vistas != sorted(ids):
+        raise CitasAfectadas(sorted(ids))
+    return motivo_requerido(motivo) if ids else (motivo or "").strip()
+
+
+def cancelar_por_cambio(cita_ids, motivo, actor_id):
+    """Cancela citas activas por un cambio de campaña o una desactivación.
+
+    No hace commit: va dentro de la transacción del cambio. Devuelve los avisos
+    para enviarlos después del commit.
+    """
+    avisos = []
+    for cita_id in cita_ids:
+        cita = Cita.buscar(cita_id)
+        cita.cerrar("cancelada", motivo)
+        registrar_auditoria(actor_id, "cita_cancelada", "citas", cita.id, {"antes": cita.estado}, motivo)
+        avisos.append(avisar(cita.paciente_usuario_id, "Cita cancelada",
+                             cita.mensaje_cancelacion(motivo), cita.id))
+    return avisos
+
+
 def fecha_hora(fecha, hora):
     """'YYYY-MM-DD' y 'HH:MM' a fecha y hora de Colombia."""
     return datetime.strptime(f"{fecha} {hora}", "%Y-%m-%d %H:%M").replace(tzinfo=ZONA_HORARIA)
@@ -188,6 +224,10 @@ class Cita:
     def nombre_estado(self):
         return NOMBRES_ESTADO[self.estado]
 
+    def mensaje_cancelacion(self, motivo):
+        return (f"Tu cita de {self.vacuna} del {self.fecha} a las {self.hora_inicio} en "
+                f"{self.punto} fue cancelada. Motivo: {motivo}")
+
     def es_de(self, usuario):
         return usuario.rol == "paciente" and self.paciente_usuario_id == usuario.id
 
@@ -245,9 +285,7 @@ class Cita:
                     raise ValueError("Solo se cancelan citas reservadas o con llegada registrada.")
                 motivo = motivo_requerido(motivo)
                 aviso = avisar(actual.paciente_usuario_id, "Cita cancelada",
-                               f"Tu cita de {actual.vacuna} del {actual.fecha} a las "
-                               f"{actual.hora_inicio} en {actual.punto} fue cancelada. Motivo: {motivo}",
-                               actual.id)
+                               actual.mensaje_cancelacion(motivo), actual.id)
             actual.cerrar("cancelada", motivo)
             registrar_auditoria(usuario.id, "cita_cancelada", "citas", actual.id,
                                 {"antes": actual.estado}, motivo)

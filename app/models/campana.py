@@ -3,7 +3,7 @@
 Estados: borrador → publicada ⇄ pausada → finalizada (RF-09, RF-10).
 """
 
-from app.db import get_db
+from app.db import get_db, transaccion_exclusiva
 from app.models.auditoria import registrar_auditoria
 from app.utils import ErroresFormulario, ahora, fecha_requerida
 
@@ -78,32 +78,36 @@ class Campana:
         return True
 
     def citas_por_fuera(self):
-        """Citas activas que quedarían fuera de la configuración nueva (RF-13)."""
+        """Ids de las citas activas que quedarían fuera de la configuración nueva (RF-13)."""
         if self.id is None:
-            return 0
+            return []
         puntos = ",".join(str(punto_id) for punto_id in self.puntos_ids) or "0"
         vacunas = ",".join(str(vacuna_id) for vacuna_id in self.vacunas_ids) or "0"
         # Los ids vienen de ids_validos(), así que son enteros seguros.
-        return get_db().execute(
-            "SELECT COUNT(*) FROM citas c JOIN franjas f ON f.id = c.franja_id"
+        filas = get_db().execute(
+            "SELECT c.id FROM citas c JOIN franjas f ON f.id = c.franja_id"
             " WHERE c.campana_id = ? AND c.estado IN ('reservada', 'presente')"
             f" AND (c.vacuna_id NOT IN ({vacunas}) OR f.punto_id NOT IN ({puntos})"
-            "      OR f.fecha < ? OR f.fecha > ?)",
+            "      OR f.fecha < ? OR f.fecha > ?) ORDER BY c.id",
             (self.id, self.fecha_inicio, self.fecha_fin),
-        ).fetchone()[0]
+        ).fetchall()
+        return [fila[0] for fila in filas]
 
-    def guardar(self, actor_id):
-        """Crea la campaña en borrador o guarda sus cambios."""
+    def guardar(self, actor_id, motivo=None, confirmadas=None):
+        """Crea la campaña en borrador o guarda sus cambios.
+
+        Si el cambio deja citas activas por fuera (fechas, puntos o vacunas),
+        lanza CitasAfectadas; al confirmarlas con motivo se cancelan y se avisa
+        a cada paciente en la misma transacción (RF-13, RF-36).
+        """
+        # Importación local: cita.py ya importa este módulo.
+        from app.models.cita import cancelar_por_cambio, confirmar_cancelacion
+
         self.validar()
-        afectadas = self.citas_por_fuera()
-        if afectadas:
-            # En M08 este rechazo se reemplaza por cancelar con motivo y avisar.
-            raise ValueError(
-                f"El cambio deja {afectadas} cita(s) activa(s) fuera de la campaña. "
-                "Por ahora no se puede aplicar."
-            )
-        db = get_db()
-        with db:
+        avisos = []
+        with transaccion_exclusiva() as db:
+            afectadas = self.citas_por_fuera()
+            motivo = confirmar_cancelacion(afectadas, confirmadas, motivo)
             if self.id is None:
                 cursor = db.execute(
                     "INSERT INTO campanas (nombre, descripcion, fecha_inicio, fecha_fin, estado)"
@@ -128,7 +132,11 @@ class Campana:
             registrar_auditoria(actor_id, accion, "campanas", self.id, {
                 "nombre": self.nombre, "fechas": [self.fecha_inicio, self.fecha_fin],
                 "puntos": self.puntos_ids, "vacunas": self.vacunas_ids,
-            })
+                "citas_canceladas": afectadas,
+            }, motivo or None)
+            avisos = cancelar_por_cambio(afectadas, motivo, actor_id)
+        for aviso in avisos:
+            aviso.enviar()  # los correos van después del commit
         return self.id
 
     def tiene_franja_valida(self):

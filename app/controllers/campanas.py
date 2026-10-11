@@ -4,6 +4,7 @@ from flask import Blueprint, abort, flash, g, redirect, render_template, request
 
 from app.controllers.cuentas import rol_requerido
 from app.models.campana import Campana
+from app.models.cita import Cita, CitasAfectadas
 from app.models.franja import Franja
 from app.models.punto import Punto
 from app.models.vacuna import Vacuna
@@ -57,10 +58,15 @@ def editar(campana_id=None):
         campana.puntos_ids = request.form.getlist("puntos")
         campana.vacunas_ids = request.form.getlist("vacunas")
         try:
-            campana.guardar(g.usuario.id)
+            campana.guardar(g.usuario.id, request.form.get("motivo"),
+                            request.form.getlist("citas_confirmadas"))
             flash("Campaña guardada.", "exito")
             return redirect(url_for("campanas.detalle", campana_id=campana.id), 303)
+        except CitasAfectadas as error:
+            return confirmar_cambio(campana, error.ids, {}, 409)
         except ErroresFormulario as error:
+            if "motivo" in error.errores:  # faltó el motivo en la confirmación
+                return confirmar_cambio(campana, campana.citas_por_fuera(), error.errores, 400)
             errores = error.errores
             flash(str(error), "error")
         except ValueError as error:
@@ -74,6 +80,22 @@ def editar(campana_id=None):
     return respuesta("campanas/form.html", errores, campana=campana, valores=valores,
                      puntos=Punto.listar(), vacunas=Vacuna.listar(),
                      elegidos_puntos=elegidos_puntos, elegidos_vacunas=elegidos_vacunas)
+
+
+def confirmar_cambio(campana, cita_ids, errores, estado):
+    """Pide confirmar con motivo un cambio de campaña que cancela citas (RF-13)."""
+    ocultos = [(campo, request.form.get(campo, "")) for campo in
+               ("nombre", "descripcion", "fecha_inicio", "fecha_fin")]
+    ocultos += [("puntos", valor) for valor in request.form.getlist("puntos")]
+    ocultos += [("vacunas", valor) for valor in request.form.getlist("vacunas")]
+    return render_template(
+        "citas/confirmar_cancelacion.html", titulo="Confirmar cambio de campaña",
+        explicacion=f"Este cambio deja {len(cita_ids)} cita(s) activa(s) fuera de «{campana.nombre}». "
+                    "Al confirmar se cancelan y cada paciente recibe un aviso con el motivo.",
+        citas=[Cita.buscar(cita_id) for cita_id in cita_ids], ocultos=ocultos, errores=errores,
+        accion_url=url_for("campanas.editar", campana_id=campana.id),
+        boton="Confirmar y cancelar citas",
+        volver=url_for("campanas.detalle", campana_id=campana.id)), estado
 
 
 @bp.route("/campanas/<int:campana_id>/<accion>", methods=["POST"])

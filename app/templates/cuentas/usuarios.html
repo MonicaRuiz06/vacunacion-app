@@ -25,6 +25,14 @@ Usuarios
           {% if not usuario.activo %}Inactiva{% elif usuario.pendiente %}Invitación pendiente{% else %}Activa{% endif %}
         </td>
         <td>
+          {% if usuario.rol == "paciente" and usuario.activo %}
+            <a href="{{ url_for('cuentas.desactivar', usuario_id=usuario.id) }}">Desactivar</a>
+          {% elif usuario.rol == "paciente" %}
+            <form method="post" action="{{ url_for('cuentas.reactivar', usuario_id=usuario.id) }}" class="en-linea">
+              {{ csrf_campo() }}
+              <button type="submit">Reactivar</button>
+            </form>
+          {% endif %}
           {% if usuario.rol == "vacunador" %}
             <a href="{{ url_for('cuentas.puntos_vacunador', usuario_id=usuario.id) }}">Puntos</a>
             {% if usuario.pendiente %}

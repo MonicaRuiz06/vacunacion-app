@@ -7,8 +7,9 @@ from datetime import timedelta
 
 from werkzeug.security import check_password_hash, generate_password_hash
 
-from app.db import get_db
+from app.db import get_db, transaccion_exclusiva
 from app.models.auditoria import registrar_auditoria
+from app.models.cita import Cita, cancelar_por_cambio, confirmar_cancelacion, motivo_requerido
 from app.utils import ErroresFormulario, ahora
 
 TIPOS_DOCUMENTO = ("CC", "CE", "PASAPORTE")
@@ -267,6 +268,41 @@ class Usuario:
         with get_db():
             self.guardar_contrasena(nueva)
             registrar_auditoria(self.id, "contrasena_cambiada", "usuarios", self.id)
+
+    def citas_activas(self):
+        """Citas reservadas o con llegada del paciente (las que cancela una desactivación)."""
+        return [cita for cita in Cita.de_paciente(self.id) if cita.estado in ("reservada", "presente")]
+
+    def desactivar(self, actor, motivo, confirmadas):
+        """El administrador desactiva a un paciente (RF-08).
+
+        Cancela sus citas activas con aviso, cierra sus sesiones y conserva su
+        historial. confirmadas son las citas que el administrador revisó.
+        """
+        if actor.rol != "administrador" or self.rol != "paciente":
+            raise PermissionError("Solo el administrador desactiva cuentas de pacientes.")
+        with transaccion_exclusiva():
+            afectadas = [cita.id for cita in self.citas_activas()]
+            confirmar_cancelacion(afectadas, confirmadas, motivo)
+            motivo = motivo_requerido(motivo)  # siempre se pide el motivo
+            get_db().execute("UPDATE usuarios SET activo = 0 WHERE id = ?", (self.id,))
+            self.cerrar_sesiones()
+            registrar_auditoria(actor.id, "cuenta_desactivada", "usuarios", self.id,
+                                {"citas_canceladas": afectadas}, motivo)
+            avisos = cancelar_por_cambio(afectadas, motivo, actor.id)
+        self.activo = 0
+        for aviso in avisos:
+            aviso.enviar()  # el aviso queda en la cuenta aunque ya no pueda ingresar
+
+    def reactivar(self, actor):
+        """Permite ingresar de nuevo sin restaurar citas canceladas (RF-40)."""
+        if actor.rol != "administrador" or self.rol != "paciente":
+            raise PermissionError("Solo el administrador reactiva cuentas de pacientes.")
+        db = get_db()
+        with db:
+            db.execute("UPDATE usuarios SET activo = 1 WHERE id = ?", (self.id,))
+            registrar_auditoria(actor.id, "cuenta_reactivada", "usuarios", self.id)
+        self.activo = 1
 
     def puntos(self):
         """Puntos de vacunación asignados (solo vacunadores)."""
