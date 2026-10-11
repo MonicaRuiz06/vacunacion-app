@@ -33,7 +33,7 @@ def numero_valido(numero_dosis, vacuna_id, paciente_id, excluir_dosis_id=None):
     return numero_dosis
 
 
-def lote_valido(lote_id, vacuna_id, punto_id, fecha):
+def lote_valido(lote_id, vacuna_id, punto_id, fecha, requiere_saldo=True):
     """El lote es de esa vacuna, sirve en esa fecha y tiene existencias en el punto (RF-25, RF-27)."""
     lote_id = numero(lote_id, "Elige un lote.")
     fila = get_db().execute(
@@ -46,7 +46,7 @@ def lote_valido(lote_id, vacuna_id, punto_id, fecha):
         raise ValueError("Ese lote no es de la vacuna de la cita.")
     if fila["fecha_vencimiento"] < fecha:
         raise ValueError("Ese lote estaba vencido en la fecha de aplicación.")
-    if not fila["cantidad_disponible"]:
+    if fila["cantidad_disponible"] is None or (requiere_saldo and not fila["cantidad_disponible"]):
         raise ValueError("Ese lote no tiene existencias en este punto.")
     return lote_id
 
@@ -209,7 +209,9 @@ class DosisAplicada:
             if destino.id == actual.cita_id or destino.punto_id != actual.punto_id \
                     or destino.fecha != actual.fecha_aplicacion:
                 raise ValueError("La cita correcta debe ser de otra atención del mismo punto y fecha.")
-            lote_id = lote_valido(lote_id, destino.vacuna_id, destino.punto_id, actual.fecha_aplicacion)
+            lote_id = numero(lote_id, "Elige un lote.")
+            lote_id = lote_valido(lote_id, destino.vacuna_id, destino.punto_id,
+                                  actual.fecha_aplicacion, requiere_saldo=lote_id != actual.lote_id)
             numero_dosis = numero_valido(numero_dosis, destino.vacuna_id, destino.paciente_id)
 
             db.execute("UPDATE dosis_aplicadas SET estado = 'anulada' WHERE id = ?", (actual.id,))
@@ -265,15 +267,15 @@ class DosisAplicada:
         ).fetchall()
 
     @staticmethod
-    def lotes_del_punto(punto_id, fecha):
-        """Lotes de cualquier vacuna con existencias en el punto que servían en esa fecha."""
+    def lotes_del_punto(punto_id, fecha, lote_actual_id=None):
+        """Lotes utilizables y el ya consumido, aunque este haya quedado sin saldo."""
         return get_db().execute(
             "SELECT l.id, v.nombre || ' · ' || l.codigo || ' · vence ' || l.fecha_vencimiento AS nombre"
             " FROM lotes l JOIN vacunas v ON v.id = l.vacuna_id"
             " JOIN inventarios_biologicos i ON i.lote_id = l.id"
-            " WHERE i.punto_id = ? AND l.fecha_vencimiento >= ? AND i.cantidad_disponible > 0"
+            " WHERE i.punto_id = ? AND l.fecha_vencimiento >= ? AND (i.cantidad_disponible > 0 OR l.id = ?)"
             " ORDER BY v.nombre, l.fecha_vencimiento",
-            (punto_id, fecha),
+            (punto_id, fecha, lote_actual_id),
         ).fetchall()
 
     @staticmethod

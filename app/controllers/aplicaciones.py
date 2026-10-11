@@ -79,4 +79,4 @@ def rectificar(dosis_id):
                                  request.form.get("numero_dosis"), request.form.get("motivo")),
         "aplicaciones/rectificar.html", dosis, "Aplicación rectificada.",
         citas=DosisAplicada.citas_para_rectificar(dosis),
-        lotes=DosisAplicada.lotes_del_punto(dosis.punto_id, dosis.fecha_aplicacion))
+        lotes=DosisAplicada.lotes_del_punto(dosis.punto_id, dosis.fecha_aplicacion, dosis.lote_id))

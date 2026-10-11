@@ -123,16 +123,15 @@ def usar_token(token, proposito, contrasena_nueva):
     mensaje = validar_contrasena(contrasena_nueva)
     if mensaje:
         raise ErroresFormulario({"contrasena_nueva": mensaje})
-    db = get_db()
-    fila = db.execute(
-        "SELECT usuario_id FROM tokens_cuenta"
-        " WHERE token_hash = ? AND proposito = ? AND expira_en > ?",
-        (resumir_token(token or ""), proposito, ahora().isoformat()),
-    ).fetchone()
-    usuario = Usuario.buscar(fila["usuario_id"]) if fila else None
-    if usuario is None or not usuario.activo:
-        raise ValueError("El enlace no es válido o ya venció. Solicita uno nuevo.")
-    with db:
+    with transaccion_exclusiva() as db:
+        fila = db.execute(
+            "SELECT usuario_id FROM tokens_cuenta"
+            " WHERE token_hash = ? AND proposito = ? AND expira_en > ?",
+            (resumir_token(token or ""), proposito, ahora().isoformat()),
+        ).fetchone()
+        usuario = Usuario.buscar(fila["usuario_id"]) if fila else None
+        if usuario is None or not usuario.activo:
+            raise ValueError("El enlace no es válido o ya venció. Solicita uno nuevo.")
         usuario.guardar_contrasena(contrasena_nueva)
         registrar_auditoria(usuario.id, "contrasena_establecida", "usuarios", usuario.id,
                             {"medio": proposito})

@@ -5,6 +5,7 @@ import secrets
 from flask import Blueprint, abort, flash, g, redirect, render_template, request, url_for
 
 from app.controllers.cuentas import rol_requerido
+from app.models.cita import preparar
 from app.models.inventario import Inventario, registrar_entrada
 from app.models.lote import Lote
 from app.models.punto import Punto
@@ -26,6 +27,7 @@ def clave_formulario():
 @bp.route("/inventario")
 @rol_requerido("administrador", "vacunador")
 def inventario():
+    preparar()
     # El vacunador solo consulta sus puntos asignados.
     puntos_ids = None
     if g.usuario.rol == "vacunador":
