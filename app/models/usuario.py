@@ -231,6 +231,10 @@ class Usuario:
             registrar_auditoria(actor_id, "vacunador_invitado", "usuarios", self.id, {"puntos": ids})
         return token
 
+    def iniciales(self):
+        """Hasta dos iniciales del nombre, para el avatar de la cabecera."""
+        return "".join(palabra[0] for palabra in self.nombre_completo.split()[:2]).upper()
+
     def comprobar_contrasena(self, contrasena):
         return bool(self.password_hash) and check_password_hash(self.password_hash, contrasena or "")
 

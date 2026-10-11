@@ -2,12 +2,14 @@
 
 import os
 
-from flask import Flask, render_template
+from flask import Flask, g, render_template
 from flask_wtf.csrf import CSRFError, CSRFProtect
 
 from app import db
 from app.controllers import avisos, campanas, catalogos, citas, cuentas, general, inventario
+from app.models.campana import Campana
 from app.models.cita import Cita
+from app.models.punto import Punto
 from config import Config
 
 
@@ -39,7 +41,12 @@ def create_app(test_config=None):
 
     @app.route("/")
     def inicio():
-        return render_template("index.html")
+        if g.usuario:
+            return render_template("index.html")  # accesos según el rol
+        # Portada pública con las campañas abiertas y los puntos.
+        Campana.finalizar_vencidas()
+        return render_template("portada.html", campanas=Campana.listar(solo_publicadas=True),
+                               puntos=Punto.listar())
 
     # Páginas de error en español, con la plantilla común.
     @app.errorhandler(400)

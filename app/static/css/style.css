@@ -65,7 +65,10 @@ a:hover { text-decoration-thickness: 2px; }
 
 .banda {
   position: relative;
-  overflow: hidden;
+  /* Recorta las diagonales solo a los lados: sin barra de desplazamiento y
+     dejando que el menú de la cuenta se despliegue por debajo de la banda. */
+  overflow-x: clip;
+  overflow-y: visible;
   background: var(--banda);
   color: #FFFFFF;
   padding-bottom: 88px; /* espacio para que la hoja se monte encima */
@@ -87,7 +90,7 @@ a:hover { text-decoration-thickness: 2px; }
 .menu {
   position: relative; /* por encima de las diagonales */
   z-index: 1;
-  max-width: 1120px;
+  max-width: 1440px;
   margin: 0 auto;
   padding: 18px 32px 0;
   display: flex;
@@ -104,15 +107,11 @@ a:hover { text-decoration-thickness: 2px; }
 /* Logo del sistema (app/static/img/logo.svg). */
 .logo { flex: none; width: 52px; height: 52px; border-radius: 14px; }
 
-.herramientas { display: flex; align-items: center; gap: 14px; }
+.herramientas { display: flex; align-items: center; gap: 12px; margin-left: auto; }
 .herramientas form { margin: 0; }
-.usuario { font-weight: 700; text-align: right; line-height: 1.2; }
-.usuario small { display: block; font-weight: 400; font-size: 13px; color: #BFD4EE; }
 
 .menu { padding-top: 18px; gap: 6px; }
-.menu form { margin: 0; }
-.menu a,
-.menu .enlace-salir {
+.menu a {
   display: inline-block;
   min-height: 40px;
   padding: 8px 16px;
@@ -120,24 +119,75 @@ a:hover { text-decoration-thickness: 2px; }
   color: #FFFFFF;
   text-decoration: none;
 }
-.menu a:hover,
-.menu .enlace-salir:hover { background: rgba(255, 255, 255, 0.14); }
+.menu a:hover { background: rgba(255, 255, 255, 0.14); }
 .menu a[aria-current="page"] { background: #FFFFFF; color: #004B87; font-weight: 700; }
 
-/* Botones claros sobre la banda (tema y salir). */
-.boton-tema,
-.menu .enlace-salir {
+/* Botón de tema: solo el ícono (luna o sol), redondo, sobre la banda. */
+.boton-tema {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  min-height: 44px;
+  padding: 0;
   border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 50%;
   background: transparent;
   color: #FFFFFF;
-  font-weight: 600;
 }
+.icono { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+/* Avatar con iniciales y su menú (details/summary, sin JavaScript). */
+.cuenta { position: relative; }
+.avatar {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #FFFFFF;
+  color: #004B87;
+  font-weight: 800;
+  cursor: pointer;
+  list-style: none;
+}
+.avatar::-webkit-details-marker { display: none; }
+.menu-cuenta {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  z-index: 5;
+  min-width: 220px;
+  padding: 8px;
+  background: var(--tarjeta);
+  color: var(--texto);
+  border: 1px solid var(--borde);
+  border-radius: 12px;
+  box-shadow: var(--sombra);
+}
+.menu-cuenta p { margin: 0; padding: 8px 12px; border-bottom: 1px solid var(--borde); line-height: 1.3; }
+.menu-cuenta small { color: var(--texto-suave); }
+.menu-cuenta a,
+.menu-cuenta button {
+  display: block;
+  width: 100%;
+  min-height: 40px;
+  padding: 9px 12px;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--texto);
+  font-weight: 500;
+  text-align: left;
+  text-decoration: none;
+}
+.menu-cuenta a:hover,
+.menu-cuenta button:hover { background: var(--fondo); filter: none; }
+.menu-cuenta form { margin: 0; max-width: none; }
 
 /* --- Hoja de contenido (se monta sobre la banda) --------------------------- */
 
 .hoja {
   position: relative;
-  max-width: 1120px;
+  width: min(1440px, calc(100% - 64px)); /* siempre con margen a los lados */
   margin: -64px auto 40px;
   padding: 32px;
   background: var(--tarjeta);
@@ -241,7 +291,96 @@ dd { margin: 0; overflow-wrap: anywhere; }
 }
 .boton.secundario { background: transparent; color: var(--enlace); border: 1px solid var(--borde); }
 
+.antetitulo { margin: 0 0 8px; font-size: 13px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--texto-suave); }
+
 .tarjetas { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
+
+/* Tarjeta que es un enlace: se eleva al pasar el cursor o con el teclado. */
+.tarjeta-enlace {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 20px;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  color: var(--texto);
+  text-decoration: none;
+  transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s;
+}
+.tarjeta-enlace:hover,
+.tarjeta-enlace:focus-visible { transform: translateY(-3px); box-shadow: var(--sombra); border-color: var(--enlace); }
+.tarjeta-enlace h2, .tarjeta-enlace h3 { margin: 0; font-size: 18px; }
+.tarjeta-enlace p { margin: 0; color: var(--texto-suave); }
+.tarjeta-enlace .mas, .tarjeta-enlace > span:last-child { margin-top: auto; color: var(--enlace); font-weight: 700; }
+.etiquetas { display: flex; flex-wrap: wrap; gap: 6px; }
+.etiqueta { padding: 2px 10px; border-radius: 999px; background: var(--info-fondo); color: var(--info-texto); font-size: 13px; font-weight: 600; }
+
+/* --- Portada (inicio sin sesión) ----------------------------------------- */
+
+.portada { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 32px; align-items: center; }
+.portada h1 { font-size: clamp(30px, 4.5vw, 46px); }
+.cifras { display: flex; flex-wrap: wrap; gap: 12px 28px; margin: 8px 0 0; padding: 0; list-style: none; color: var(--texto-suave); }
+.cifras strong { display: block; font-size: 30px; font-weight: 800; color: var(--texto); line-height: 1.1; }
+
+.ilustracion {
+  display: grid;
+  place-items: center;
+  min-height: 280px;
+  border-radius: var(--radio);
+  background: var(--banda);
+  overflow: hidden;
+  position: relative;
+}
+.ilustracion::before { content: ""; position: absolute; inset: 0 -40px 0 45%; background: var(--diagonal); clip-path: polygon(30% 0, 100% 0, 100% 100%, 0 100%); }
+.tarjeta-cita {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: min(300px, 85%);
+  padding: 20px;
+  border-radius: var(--radio);
+  background: var(--tarjeta);
+  box-shadow: var(--sombra);
+  transform: rotate(-2deg);
+  transition: transform 0.2s;
+}
+.ilustracion:hover .tarjeta-cita { transform: rotate(0deg) scale(1.03); }
+.tarjeta-cita strong { font-size: 20px; }
+.tarjeta-cita small { color: var(--texto-suave); }
+.tarjeta-cita .estado { align-self: flex-start; }
+.barra { height: 8px; border-radius: 4px; background: var(--fondo); overflow: hidden; }
+.barra span { display: block; width: 70%; height: 100%; background: var(--accion); }
+
+.seccion { margin-top: 40px; }
+.seccion > h2 { margin-top: 0; }
+
+.pasos { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin: 0; padding: 0; list-style: none; counter-reset: paso; }
+.pasos li { position: relative; padding: 20px 20px 20px 72px; border: 1px solid var(--borde); border-radius: var(--radio); counter-increment: paso; }
+.pasos li::before {
+  content: counter(paso);
+  position: absolute;
+  left: 20px;
+  top: 20px;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--accion);
+  color: var(--texto-accion);
+  font-weight: 800;
+}
+.pasos strong { display: block; }
+.pasos span { color: var(--texto-suave); }
+
+.lista-puntos { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 8px 24px; margin: 0; padding: 0; list-style: none; }
+.lista-puntos li { padding: 12px 0; border-bottom: 1px solid var(--borde); }
+.lista-puntos span { display: block; color: var(--texto-suave); }
+
+.pregunta { border-bottom: 1px solid var(--borde); }
+.pregunta summary { padding: 14px 0; font-weight: 700; cursor: pointer; }
+.pregunta p { color: var(--texto-suave); }
 .tarjetas article { padding: 20px; border: 1px solid var(--borde); border-radius: var(--radio); }
 .tarjetas h2 { margin-top: 0; font-size: 18px; }
 .tarjetas p { margin: 0; color: var(--texto-suave); }
@@ -255,7 +394,7 @@ dd { margin: 0; overflow-wrap: anywhere; }
 
 /* --- Pie ----------------------------------------------------------------- */
 
-.pie { max-width: 1120px; margin: 0 auto; padding: 0 32px 32px; font-size: 13px; color: var(--texto-suave); }
+.pie { max-width: 1440px; margin: 0 auto; padding: 0 32px 32px; font-size: 13px; color: var(--texto-suave); }
 
 /* --- Celular ------------------------------------------------------------- */
 
@@ -264,9 +403,15 @@ dd { margin: 0; overflow-wrap: anywhere; }
   .banda::before { width: 220px; }
   .banda::after { width: 130px; }
   .banda-superior, .menu { padding-left: 16px; padding-right: 16px; }
-  .marca small, .usuario { display: none; }
+  .marca small { display: none; }
+  .marca { gap: 10px; }
+  .marca strong { font-size: 16px; }
+  .logo { width: 40px; height: 40px; border-radius: 11px; }
+  .herramientas { gap: 8px; }
+  .portada { grid-template-columns: 1fr; }
+  .ilustracion { min-height: 220px; }
   .menu { flex-wrap: nowrap; overflow-x: auto; }
-  .menu a, .menu .enlace-salir { white-space: nowrap; }
-  .hoja { margin: -56px 16px 32px; padding: 20px; }
+  .menu a { white-space: nowrap; }
+  .hoja { width: calc(100% - 32px); margin: -56px auto 32px; padding: 20px; }
   .pie { padding: 0 16px 24px; }
 }

@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+
+{% block titulo %}
+Inicio
+{% endblock %}
+
+{% block contenido %}
+<section class="portada">
+  <div>
+    <p class="antetitulo">Sistema de Gestión de Campañas de Vacunación</p>
+    <h1>Vacúnate sin filas: elige tu punto y tu hora.</h1>
+    <p class="intro">Reserva tu cita en las campañas de la Universidad Santiago de Cali, recibe avisos si algo cambia y consulta tu historial de dosis.</p>
+    <div class="acciones">
+      <a class="boton" href="{{ url_for('cuentas.registro') }}">Crear mi cuenta</a>
+      <a class="boton secundario" href="{{ url_for('cuentas.ingresar') }}">Ya tengo cuenta</a>
+    </div>
+    <ul class="cifras">
+      <li><strong>{{ campanas | length }}</strong> campaña{{ "s" if campanas | length != 1 }} abierta{{ "s" if campanas | length != 1 }}</li>
+      <li><strong>{{ puntos | length }}</strong> punto{{ "s" if puntos | length != 1 }} de vacunación</li>
+      <li><strong>16+</strong> años para registrarte</li>
+    </ul>
+  </div>
+
+  {# Ilustración de cómo se ve una cita reservada (no son datos reales). #}
+  <div class="ilustracion" aria-hidden="true">
+    <div class="tarjeta-cita">
+      <span class="estado estado-publicada">Reservada</span>
+      <strong>Influenza · dosis 1</strong>
+      <span>Jueves · 09:00 – 09:30</span>
+      <span>Punto Campus</span>
+      <span class="barra"><span></span></span>
+      <small>Puedes cambiarla hasta 2 horas antes</small>
+    </div>
+  </div>
+</section>
+
+<section class="seccion">
+  <h2>Campañas abiertas</h2>
+  {% if campanas %}
+    <div class="tarjetas">
+      {% for campana in campanas %}
+        <a class="tarjeta-enlace" href="{{ url_for('cuentas.registro') }}">
+          <h3>{{ campana.nombre }}</h3>
+          <p>{{ campana.fecha_inicio }} a {{ campana.fecha_fin }} · {{ campana.puntos() | length }} punto{{ "s" if campana.puntos() | length != 1 }}</p>
+          <p class="etiquetas">
+            {% for vacuna in campana.vacunas() %}<span class="etiqueta">{{ vacuna.nombre }}</span>{% endfor %}
+          </p>
+          <span class="mas">Crea tu cuenta para reservar <span aria-hidden="true">→</span></span>
+        </a>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p class="mensaje info">Pronto publicaremos nuevas campañas. Crea tu cuenta para estar listo.</p>
+  {% endif %}
+</section>
+
+<section class="seccion">
+  <h2>Cómo funciona</h2>
+  <ol class="pasos">
+    <li><strong>Crea tu cuenta</strong><span>Con tu documento y correo, desde los 16 años.</span></li>
+    <li><strong>Elige tu cita</strong><span>Campaña, vacuna, punto y franja con cupos libres.</span></li>
+    <li><strong>Llega y vacúnate</strong><span>El equipo registra tu llegada y la dosis aplicada.</span></li>
+  </ol>
+</section>
+
+{% if puntos %}
+  <section class="seccion">
+    <h2>Puntos de vacunación</h2>
+    <ul class="lista-puntos">
+      {% for punto in puntos %}
+        <li><strong>{{ punto.nombre }}</strong><span>{{ punto.direccion }}{% if punto.municipio %}, {{ punto.municipio }}{% endif %} · {{ punto.hora_apertura }} – {{ punto.hora_cierre }}</span></li>
+      {% endfor %}
+    </ul>
+  </section>
+{% endif %}
+
+<section class="seccion">
+  <h2>Preguntas frecuentes</h2>
+  <details class="pregunta">
+    <summary>¿Quién puede registrarse?</summary>
+    <p>Personas desde los 16 años. Entre 16 y 17 años debes declarar que tu responsable te autorizó.</p>
+  </details>
+  <details class="pregunta">
+    <summary>¿Puedo cambiar o cancelar mi cita?</summary>
+    <p>Sí, desde «Citas», hasta 2 horas antes del inicio de tu franja.</p>
+  </details>
+  <details class="pregunta">
+    <summary>¿Qué pasa si no llego?</summary>
+    <p>Si no registras tu llegada, 30 minutos después del fin de la franja la cita queda como «No asistió» y el cupo se libera.</p>
+  </details>
+  <details class="pregunta">
+    <summary>¿Recibo un comprobante?</summary>
+    <p>Podrás consultar tu historial y descargar un comprobante académico, sin validez oficial.</p>
+  </details>
+</section>
+{% endblock %}
