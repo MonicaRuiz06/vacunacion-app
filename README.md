@@ -243,10 +243,41 @@ fecha, campaña y punto, y exporta citas, aplicaciones e inventario en CSV.
 ## Avisos y correo
 
 Cada usuario ve sus avisos en «Avisos». Si un correo falla, el aviso se conserva
-y el personal lo reintenta en «Avisos → Correos fallidos». Para enviar correos
-reales, copia `.env.example` como `.env` y completa los datos del correo (el
-archivo `.env` no se sube a Git). Sin `MAIL_SERVER`, `python run.py` muestra los
-correos en la terminal.
+y el personal lo reintenta en «Avisos → Correos fallidos». Sin `MAIL_SERVER`,
+`python run.py` muestra los correos en la terminal; en producción
+(`--produccion`) el correo real es obligatorio.
+
+Los correos reales se envían con [Brevo](https://www.brevo.com) por SMTP (no
+requiere librerías adicionales ni dominio propio):
+
+1. Crea una cuenta gratuita en Brevo.
+2. Verifica el remitente: **Senders, Domains & Dedicated IPs → Senders → Add a
+   sender**, con el nombre «Vacunación» y el correo del proyecto. Brevo envía
+   un código a ese correo para confirmarlo.
+3. En **SMTP & API → SMTP**, pulsa **Generate a new SMTP key** y copia la clave
+   (empieza por `xsmtpsib-` y solo se muestra una vez). En la misma página está
+   el **Login** (termina en `@smtp-brevo.com`).
+4. Copia `.env.example` como `.env` (no se sube a Git) y completa:
+   - `MAIL_USERNAME`: el Login.
+   - `MAIL_PASSWORD`: la clave SMTP (no la contraseña de la cuenta).
+   - `MAIL_FROM`: el remitente verificado, p. ej.
+     `Vacunación <vacunacion.usc@gmail.com>`.
+
+   El servidor (`smtp-relay.brevo.com`, puerto 587) ya viene puesto.
+5. Comprueba la configuración:
+
+   ```bash
+   flask --app run probar-correo tu-correo@example.com
+   ```
+
+   Si responde `No se pudo enviar`, la terminal muestra el tipo de error:
+   `SMTPAuthenticationError` indica un Login o clave mal copiados; otro error
+   `SMTP…` suele ser un remitente sin verificar. Los envíos y rechazos también
+   aparecen en Brevo, en **Transactional → Logs**.
+
+El plan gratuito de Brevo permite 300 correos al día. Sin dominio propio,
+algunos correos pueden llegar a spam: pide a los usuarios revisar esa carpeta
+la primera vez.
 
 ## Acceso a SQLite desde Flask
 
