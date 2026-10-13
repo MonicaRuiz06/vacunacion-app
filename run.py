@@ -17,6 +17,11 @@ app = create_app()
 
 if __name__ == "__main__":
     if "--produccion" in sys.argv[1:]:
+        # Sin debug los correos no se muestran en la terminal: sin servidor de
+        # correo, las invitaciones y la recuperación de contraseña se pierden.
+        if not app.config.get("MAIL_SERVER"):
+            print("AVISO: no hay correo configurado (MAIL_SERVER en .env); "
+                  "no llegarán invitaciones ni enlaces de recuperación.", flush=True)
         # Sin debug: el depurador de Flask permite ejecutar código desde el
         # navegador si ocurre un error. threaded atiende varias peticiones a la vez.
         app.run(
