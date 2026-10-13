@@ -3,7 +3,8 @@
 from functools import wraps
 
 import click
-from flask import Blueprint, abort, flash, g, redirect, render_template, request, session, url_for
+from flask import (Blueprint, abort, current_app, flash, g, redirect, render_template, request,
+                   session, url_for)
 
 from app.db import get_db
 from app.models.cita import Cita, CitasAfectadas
@@ -386,3 +387,17 @@ def crear_admin(nombre, tipo, documento, correo, contrasena):
     except ErroresFormulario as error:
         for mensaje in error.errores.values():
             click.echo(f"- {mensaje}")
+
+
+@bp.cli.command("probar-correo")
+@click.argument("destino")
+def probar_correo(destino):
+    """Envía un correo de prueba para revisar la configuración (MAIL_* en .env)."""
+    if not current_app.config.get("MAIL_SERVER"):
+        click.echo("No hay correo configurado: define MAIL_SERVER en .env (ver .env.example).")
+        return
+    texto = "Si recibes este mensaje, el correo del sistema de vacunación funciona."
+    if enviar_correo(destino, "Prueba de correo", texto):
+        click.echo(f"Correo enviado a {destino}.")
+    else:
+        click.echo("No se pudo enviar. Revisa MAIL_SERVER, MAIL_PASSWORD y MAIL_FROM en .env.")
