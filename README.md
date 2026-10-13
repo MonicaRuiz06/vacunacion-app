@@ -33,6 +33,39 @@ También se puede crear explícitamente con `flask --app run init-db`.
 Para guardar la base en otra ruta, define `DATABASE_PATH`. En producción,
 define además `SECRET_KEY` con un valor secreto propio.
 
+## Ejecutar en producción
+
+`python run.py` es solo para desarrollo (modo debug, solo este equipo). Para
+que otros usen la app se usa el mismo servidor de Flask sin modo debug, que
+funciona igual en Windows, Linux y Android:
+
+```bash
+python run.py --produccion
+```
+
+Escucha en `0.0.0.0:5000`, así que otros equipos de la misma red entran con
+`http://<IP-de-este-equipo>:5000`. El puerto y la interfaz se cambian con las
+variables `PORT` y `HOST`. En este modo los correos **no** se muestran en la
+terminal: configura el correo (ver «Avisos y correo») para que lleguen las
+invitaciones y la recuperación de contraseña.
+
+### Android (Termux)
+
+Instala [Termux](https://termux.dev) desde F-Droid y, dentro de Termux:
+
+```bash
+pkg install python git python-pillow
+git clone <url-del-repositorio> && cd vacunacion-app
+python -m venv --system-site-packages .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+python run.py --produccion
+```
+
+`python-pillow` se instala con `pkg` porque compilarlo con `pip` en el
+teléfono suele fallar; `--system-site-packages` deja que el entorno lo use.
+Luego abre `http://127.0.0.1:5000` en el navegador del teléfono.
+
 ## Esquema SQLite actual
 
 El esquema se mantiene en `app/schema.sql` y se ejecuta con el módulo estándar
