@@ -267,3 +267,24 @@ def test_crear_admin_desde_la_consola(app):
         assert Usuario.autenticar("CC", "9001", "Admin#123").rol == "administrador"
     segundo = runner.invoke(args=["crear-admin"], input=entrada)
     assert "Ya existe un administrador" in segundo.output
+
+
+# Prueba del correo
+
+
+def test_probar_correo_envia_un_mensaje(app, smtp_falso):
+    resultado = app.test_cli_runner().invoke(args=["probar-correo", "ana@example.com"])
+    assert "Correo enviado a ana@example.com" in resultado.output
+    assert smtp_falso["enviados"][0]["To"] == "ana@example.com"
+
+
+def test_probar_correo_informa_si_falla(app, smtp_falso):
+    smtp_falso["falla"] = True
+    resultado = app.test_cli_runner().invoke(args=["probar-correo", "ana@example.com"])
+    assert "No se pudo enviar" in resultado.output
+
+
+def test_probar_correo_sin_servidor_configurado(app):
+    app.config.update(CORREOS_ENVIADOS=None, MAIL_SERVER=None)
+    resultado = app.test_cli_runner().invoke(args=["probar-correo", "ana@example.com"])
+    assert "No hay correo configurado" in resultado.output
