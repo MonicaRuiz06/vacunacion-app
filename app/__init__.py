@@ -1,10 +1,12 @@
 """Fábrica de la aplicación Flask."""
 
 import os
+import secrets
 
 from flask import Flask, g, render_template
 from flask_wtf.csrf import CSRFError, CSRFProtect
 
+from werkzeug.middleware.proxy_fix import ProxyFix
 from app import db
 from app.controllers import (
     aplicaciones,
@@ -29,6 +31,22 @@ def create_app(test_config=None):
     app.config.from_object(Config)
     if test_config is not None:
         app.config.update(test_config)
+
+    if app.config["APP_ENV"] == "production" and not app.config.get("SECRET_KEY"):
+        raise RuntimeError("Define SECRET_KEY antes de iniciar la app en producción.")
+    if not app.config.get("SECRET_KEY"):
+        # Clave efímera para desarrollo; nunca se reutiliza como secreto de producción.
+        app.config["SECRET_KEY"] = secrets.token_hex(32)
+
+    proxy_count = app.config["TRUSTED_PROXY_COUNT"]
+    if proxy_count > 0:
+        app.wsgi_app = ProxyFix(
+            app.wsgi_app,
+            x_for=proxy_count,
+            x_proto=proxy_count,
+            x_host=proxy_count,
+            x_port=proxy_count,
+        )
 
     os.makedirs(app.instance_path, exist_ok=True)
     db.init_app(app)

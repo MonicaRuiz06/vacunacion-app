@@ -30,8 +30,20 @@ La carpeta `instance/` contiene datos locales y el archivo de base está
 ignorado por Git; cada integrante genera su propia base al ejecutar la app.
 También se puede crear explícitamente con `flask --app run init-db`.
 
-Para guardar la base en otra ruta, define `DATABASE_PATH`. En producción,
-define además `SECRET_KEY` con un valor secreto propio.
+Para guardar la base en otra ruta, define `DATABASE_PATH`. En desarrollo se
+genera una clave temporal al iniciar la app si no defines `SECRET_KEY`.
+Configura `APP_ENV=production` y una `SECRET_KEY` propia en el entorno de
+despliegue; la app se niega a arrancar en producción si falta esa clave. Por
+ejemplo, puedes generar una con `python -c "import secrets; print(secrets.token_hex(32))"`.
+No la subas al repositorio. En producción las cookies de sesión usan el
+atributo `Secure` y requieren HTTPS.
+
+Si el despliegue está detrás de un proxy inverso que establece cabeceras
+`X-Forwarded-*`, define `TRUSTED_PROXY_COUNT` con el número de proxies de
+confianza (por ejemplo, `1` para un proxy). Esto configura `ProxyFix` para que
+Flask genere URLs externas con el protocolo y host públicos. Déjalo en `0`
+cuando no haya un proxy de confianza; solo proxies controlados por el equipo
+deben poder enviar esas cabeceras.
 
 ## Ejecutar en producción
 
