@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block titulo %}
+Mis citas
+{% endblock %}
+
+{% block contenido %}
+<h1>Mis citas</h1>
+
+<p>Puedes cancelar o reprogramar una cita reservada hasta 2 horas antes de su inicio.
+  <a href="{{ url_for('campanas.campanas') }}">Ver campañas para reservar</a>.</p>
+
+{% for cita in citas %}
+  <article class="aviso">
+    <h2>{{ cita.vacuna }} · {% include "citas/_estado.html" %}</h2>
+    <p>{{ cita.fecha }} · {{ cita.hora_inicio }}–{{ cita.hora_fin }} · {{ cita.punto }} · {{ cita.campana }}</p>
+    {% if cita.motivo %}<p><small>Motivo: {{ cita.motivo }}</small></p>{% endif %}
+    {% if cita.paciente_puede_cambiar() %}
+      <div class="acciones">
+        <a class="boton secundario" href="{{ url_for('citas.reprogramar', cita_id=cita.id) }}">Reprogramar</a>
+        <a class="boton secundario" href="{{ url_for('citas.cancelar', cita_id=cita.id) }}">Cancelar</a>
+      </div>
+    {% endif %}
+  </article>
+{% else %}
+  <p>Aún no tienes citas.</p>
+{% endfor %}
+{% endblock %}

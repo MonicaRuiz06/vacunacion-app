@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% from "_formularios.html" import csrf_campo, campo, documento, casilla %}
+
+{% block titulo %}
+Mi perfil
+{% endblock %}
+
+{% block contenido %}
+<h1>Mi perfil</h1>
+
+{% if paciente %}
+  <form method="post">
+    {{ csrf_campo() }}
+    {{ campo("nombre_completo", "Nombre completo", valores, errores) }}
+    {{ documento(valores, errores) }}
+    {{ campo("fecha_nacimiento", "Fecha de nacimiento", valores, errores, tipo="date") }}
+    {{ casilla("declaracion_responsable",
+               "Tengo 16 o 17 años y mi responsable me autorizó a usar este sistema.",
+               valores.get("declaracion_responsable"), errores) }}
+    {{ campo("correo", "Correo", valores, errores, tipo="email") }}
+    {{ campo("telefono", "Teléfono", valores, errores, tipo="tel", requerido=false) }}
+    {{ campo("direccion", "Dirección", valores, errores, requerido=false) }}
+    {{ campo("municipio", "Municipio", valores, errores, requerido=false) }}
+    {{ campo("genero", "Género", valores, errores, requerido=false) }}
+    <p>Si cambias tu documento o correo, se cerrarán todas tus sesiones.</p>
+    <button type="submit">Guardar cambios</button>
+  </form>
+{% else %}
+  <dl>
+    <dt>Nombre</dt><dd>{{ g.usuario.nombre_completo }}</dd>
+    <dt>Documento</dt><dd>{{ g.usuario.tipo_documento }} {{ g.usuario.identificacion }}</dd>
+    <dt>Correo</dt><dd>{{ g.usuario.correo }}</dd>
+    <dt>Rol</dt><dd>{{ g.usuario.rol | capitalize }}</dd>
+  </dl>
+  {% if g.usuario.rol == "vacunador" %}
+    <h2>Mis puntos asignados</h2>
+    <ul>
+      {% for punto in g.usuario.puntos() %}
+        <li>{{ punto.nombre }}</li>
+      {% else %}
+        <li>Aún no tienes puntos asignados.</li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+{% endif %}
+
+<p><a href="{{ url_for('cuentas.cambiar_contrasena') }}">Cambiar contraseña</a></p>
+{% endblock %}

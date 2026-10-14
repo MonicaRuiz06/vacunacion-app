@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% from "_formularios.html" import csrf_campo, documento %}
+
+{% block titulo %}
+Recuperar contraseña
+{% endblock %}
+
+{% block contenido %}
+<h1>Recuperar contraseña</h1>
+
+<p>Te enviaremos un enlace al correo registrado. El enlace vence en 30 minutos.</p>
+
+<form method="post">
+  {{ csrf_campo() }}
+  {{ documento(valores, errores) }}
+  <button type="submit">Enviar enlace</button>
+</form>
+{% endblock %}

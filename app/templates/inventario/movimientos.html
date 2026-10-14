@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+
+{% block titulo %}
+Movimientos de inventario
+{% endblock %}
+
+{% block contenido %}
+<h1>Movimientos de inventario</h1>
+
+<p>Últimos 200 cambios de saldo, del más reciente al más antiguo.</p>
+
+<div class="tabla">
+<table>
+  <thead><tr><th>Fecha</th><th>Punto</th><th>Vacuna · lote</th><th>Tipo</th><th>Cambio</th><th>Motivo</th><th>Autor</th></tr></thead>
+  <tbody>
+    {% for movimiento in movimientos %}
+      <tr>
+        <td>{{ movimiento.fecha[:16] | replace("T", " ") }}</td>
+        <td>{{ movimiento.punto }}</td>
+        <td>{{ movimiento.vacuna }} · {{ movimiento.lote }}</td>
+        <td>{{ movimiento.tipo | capitalize }}</td>
+        <td>{{ "%+d" | format(movimiento.cantidad) }}</td>
+        <td>{{ movimiento.motivo }}</td>
+        <td>{{ movimiento.autor }}</td>
+      </tr>
+    {% else %}
+      <tr><td colspan="7">Aún no hay movimientos.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+</div>
+
+<p><a href="{{ url_for('inventario.inventario') }}">Volver al inventario</a></p>
+{% endblock %}

@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% from "_formularios.html" import estado %}
+
+{% block titulo %}
+Inventario
+{% endblock %}
+
+{% block contenido %}
+<h1>Inventario</h1>
+
+{% if g.usuario.rol == "administrador" %}
+  <div class="acciones">
+    <a class="boton" href="{{ url_for('inventario.entrada') }}">Registrar entrada</a>
+    <a class="boton secundario" href="{{ url_for('inventario.movimientos') }}">Ver movimientos</a>
+    <a class="boton secundario" href="{{ url_for('catalogos.lotes') }}">Ver lotes</a>
+  </div>
+{% else %}
+  <p>Consulta de tus puntos asignados.</p>
+{% endif %}
+
+<h2>Dosis por vacuna</h2>
+<p>Las dosis utilizables son las de lotes no vencidos. Cada cita reservada o con llegada aparta una dosis sin asignarle lote.</p>
+<div class="tabla">
+<table>
+  <thead><tr><th>Punto</th><th>Vacuna</th><th>Utilizables</th><th>Reservadas</th><th>Faltante</th></tr></thead>
+  <tbody>
+    {% for fila in resumen %}
+      <tr>
+        <td>{{ fila.punto }}</td>
+        <td>{{ fila.vacuna }}</td>
+        <td>{{ fila.utilizables }}</td>
+        <td>{{ fila.reservadas }}</td>
+        <td>
+          {% if fila.faltante %}
+            {{ estado("vencido", "Faltan " ~ fila.faltante) }}
+            <small>Las reservas nuevas de esta vacuna en este punto están bloqueadas.</small>
+          {% else %}
+            {{ estado("vigente", "Sin faltante") }}
+          {% endif %}
+        </td>
+      </tr>
+    {% else %}
+      <tr><td colspan="5">Aún no hay existencias registradas.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+</div>
+
+<h2>Existencias por lote</h2>
+<div class="tabla">
+<table>
+  <thead>
+    <tr><th>Punto</th><th>Vacuna</th><th>Lote</th><th>Vence</th><th>Estado</th><th>Saldo físico</th>{% if g.usuario.rol == "administrador" %}<th>Acciones</th>{% endif %}</tr>
+  </thead>
+  <tbody>
+    {% for fila in existencias %}
+      <tr>
+        <td>{{ fila.punto }}</td>
+        <td>{{ fila.vacuna }}</td>
+        <td>{{ fila.lote }}</td>
+        <td>{{ fila.fecha_vencimiento }}</td>
+        <td>{% if fila.vencido %}{{ estado("vencido", "Vencido") }}{% else %}{{ estado("vigente", "Vigente") }}{% endif %}</td>
+        <td>{{ fila.cantidad_disponible }}</td>
+        {% if g.usuario.rol == "administrador" %}
+          <td><a href="{{ url_for('inventario.ajuste', inventario_id=fila.id) }}">Ajustar</a></td>
+        {% endif %}
+      </tr>
+    {% else %}
+      <tr><td colspan="7">Aún no hay existencias registradas.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endblock %}

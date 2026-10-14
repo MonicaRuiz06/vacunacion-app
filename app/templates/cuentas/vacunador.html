@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% from "_formularios.html" import csrf_campo, campo, documento, casillas %}
+
+{% block titulo %}
+Invitar vacunador
+{% endblock %}
+
+{% block contenido %}
+<h1>Invitar vacunador</h1>
+
+<p>El vacunador recibirá un enlace para crear su contraseña. El enlace vence en 30 minutos.</p>
+
+<form method="post">
+  {{ csrf_campo() }}
+  {{ campo("nombre_completo", "Nombre completo", valores, errores) }}
+  {{ documento(valores, errores) }}
+  {{ campo("correo", "Correo", valores, errores, tipo="email") }}
+  {{ casillas("puntos", "Puntos asignados", puntos, elegidos, errores or {}, vacio="Aún no hay puntos de vacunación registrados.") }}
+  <button type="submit">Invitar</button>
+</form>
+
+<p><a href="{{ url_for('cuentas.usuarios') }}">Volver a usuarios</a></p>
+{% endblock %}

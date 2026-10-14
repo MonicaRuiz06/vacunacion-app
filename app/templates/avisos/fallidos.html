@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% from "_formularios.html" import csrf_campo %}
+
+{% block titulo %}
+Correos fallidos
+{% endblock %}
+
+{% block contenido %}
+<h1>Correos fallidos</h1>
+
+<p>El aviso interno ya está en la cuenta del destinatario. Reintentar solo vuelve a enviar el correo.</p>
+
+<div class="tabla">
+<table>
+  <thead><tr><th>Fecha</th><th>Destinatario</th><th>Asunto</th><th>Intentos</th><th>Acción</th></tr></thead>
+  <tbody>
+    {% for aviso in fallidos %}
+      <tr>
+        <td>{{ aviso.creado_en[:16] | replace("T", " ") }}</td>
+        <td>{{ aviso.destinatario }}<br><small>{{ aviso.correo }}</small></td>
+        <td>{{ aviso.asunto }}</td>
+        <td>{{ aviso.correo_intentos }}</td>
+        <td>
+          <form method="post" action="{{ url_for('avisos.reintentar', aviso_id=aviso.id) }}" class="en-linea">
+            {{ csrf_campo() }}
+            <button type="submit">Reintentar</button>
+          </form>
+        </td>
+      </tr>
+    {% else %}
+      <tr><td colspan="5">No hay correos fallidos.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+</div>
+
+<p><a href="{{ url_for('avisos.avisos') }}">Volver a avisos</a></p>
+{% endblock %}

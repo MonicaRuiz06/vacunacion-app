@@ -5,8 +5,33 @@ Inicio
 {% endblock %}
 
 {% block contenido %}
+<p class="antetitulo">Sistema de Gestión de Campañas de Vacunación</p>
+<h1>Hola, {{ g.usuario.nombre_completo.split()[0] }}</h1>
 
-<h1>Sistema de Gestión de Campañas de Vacunación</h1>
+{# Accesos rápidos según el rol. El administrador ve el panel en lugar de esta página. #}
+{% if g.usuario.rol == "paciente" %}
+  {% set accesos = [
+    ("campanas.campanas", "Reservar una cita", "Elige campaña, punto y franja disponibles."),
+    ("reportes.mi_historial", "Mi historial", "Tus dosis y el comprobante en PDF."),
+    ("citas.citas", "Mis citas", "Cancela o reprograma hasta 2 horas antes."),
+    ("avisos.avisos", "Avisos", "Cambios y cancelaciones de tus citas."),
+  ] %}
+{% elif g.usuario.rol == "vacunador" %}
+  {% set accesos = [
+    ("citas.citas", "Agenda", "Citas de tus puntos: llegada y cierre."),
+    ("inventario.inventario", "Inventario", "Dosis y lotes de tus puntos."),
+    ("avisos.avisos", "Avisos", "Avisos y correos fallidos de tus puntos."),
+    ("campanas.campanas", "Campañas", "Campañas publicadas."),
+  ] %}
+{% endif %}
 
-<p>Bienvenido al sistema.</p>
+<section class="tarjetas accesos" aria-label="Accesos rápidos">
+  {% for ruta, titulo, texto in accesos %}
+    <a class="tarjeta-enlace" href="{{ url_for(ruta) }}">
+      <h2>{{ titulo }}</h2>
+      <p>{{ texto }}</p>
+      <span aria-hidden="true">→</span>
+    </a>
+  {% endfor %}
+</section>
 {% endblock %}

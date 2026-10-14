@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block titulo %}
+Franjas
+{% endblock %}
+
+{% block contenido %}
+<h1>Franjas de atención</h1>
+
+<p>Los cupos de cada franja se comparten entre todas las campañas del punto.</p>
+
+<p><a class="boton" href="{{ url_for('campanas.nueva_franja') }}">Nueva franja</a></p>
+
+<form method="get" class="filtros">
+  <div class="campo">
+    <label for="punto_id">Punto</label>
+    <select id="punto_id" name="punto_id">
+      <option value="">Todos</option>
+      {% for punto in puntos %}
+        <option value="{{ punto.id }}" {% if filtros.get("punto_id") == punto.id | string %}selected{% endif %}>{{ punto.nombre }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="campo">
+    <label for="fecha">Fecha</label>
+    <input id="fecha" name="fecha" type="date" value="{{ filtros.get('fecha', '') }}">
+  </div>
+  <button type="submit">Filtrar</button>
+</form>
+
+<div class="tabla">
+<table>
+  <thead><tr><th>Fecha</th><th>Punto</th><th>Horario</th><th>Ocupados / cupos</th><th>Acciones</th></tr></thead>
+  <tbody>
+    {% for franja in franjas %}
+      <tr>
+        <td>{{ franja.fecha }}</td>
+        <td>{{ franja.punto }}</td>
+        <td>{{ franja.hora_inicio }} – {{ franja.hora_fin }}</td>
+        <td>{{ franja.ocupados }} / {{ franja.cupos }}</td>
+        <td><a href="{{ url_for('campanas.editar_franja', franja_id=franja.id) }}">Cambiar cupos</a></td>
+      </tr>
+    {% else %}
+      <tr><td colspan="5">No hay franjas para estos filtros.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endblock %}

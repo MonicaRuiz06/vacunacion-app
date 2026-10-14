@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block titulo %}
+Historial de vacunación
+{% endblock %}
+
+{% block contenido %}
+<h1>{{ "Mi historial" if propio else "Historial de " ~ datos.nombre_completo }}</h1>
+
+<p>{{ datos.nombre_completo }} · {{ datos.documento }} · nacimiento {{ datos.fecha_nacimiento }}</p>
+
+{% if propio %}
+  <p><a class="boton" href="{{ url_for('reportes.mi_historial_pdf') }}">Descargar PDF académico</a></p>
+  <p><small>El PDF es un documento académico, sin validez oficial.</small></p>
+{% else %}
+  <p><small>Consulta de solo lectura para la atención del paciente.</small></p>
+{% endif %}
+
+<div class="tabla">
+<table>
+  <thead><tr><th>Fecha</th><th>Vacuna</th><th>Dosis</th><th>Lote</th><th>Punto</th></tr></thead>
+  <tbody>
+    {% for fila in filas %}
+      <tr><td>{{ fila.fecha_aplicacion }}</td><td>{{ fila.vacuna }}</td><td>{{ fila.numero_dosis }}</td><td>{{ fila.lote }}</td><td>{{ fila.punto }}</td></tr>
+    {% else %}
+      <tr><td colspan="5">No hay aplicaciones registradas.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endblock %}

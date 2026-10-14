@@ -1,6 +1,18 @@
 # vacunacion-app
 Sistema de Gestión de Campañas de Vacunación — Mini-Proyecto I, Lenguajes de Programación 2026B. Flask + SQLite, arquitectura MVC.
 
+## Diseño de la interfaz
+
+Propuesta elegida por el equipo: **banda de identidad** con el azul marino de la
+Universidad Santiago de Cali, verde para las acciones principales y tema claro y
+noche. Las imágenes son de la maqueta (datos ficticios); las pantallas reales se
+construyen módulo a módulo.
+
+<p>
+  <img src="assets/readme/diseno-escritorio-claro.png" alt="Panel del administrador en tema claro" width="68%">
+  <img src="assets/readme/diseno-celular-noche.png" alt="Mis citas del paciente en celular, tema noche" width="28%">
+</p>
+
 ## Preparar el entorno
 
 Requiere Python 3.10 o posterior.
@@ -33,23 +45,251 @@ Flask genere URLs externas con el protocolo y host públicos. Déjalo en `0`
 cuando no haya un proxy de confianza; solo proxies controlados por el equipo
 deben poder enviar esas cabeceras.
 
+## Ejecutar en producción
+
+`python run.py` es solo para desarrollo (modo debug, solo este equipo). Para
+que otros usen la app se usa el mismo servidor de Flask sin modo debug, que
+funciona igual en Windows, Linux y Android:
+
+```bash
+python run.py --produccion
+```
+
+Escucha en `0.0.0.0:5000`, así que otros equipos de la misma red entran con
+`http://<IP-de-este-equipo>:5000`. El puerto y la interfaz se cambian con las
+variables `PORT` y `HOST`. En este modo los correos **no** se muestran en la
+terminal: configura el correo (ver «Avisos y correo») para que lleguen las
+invitaciones y la recuperación de contraseña.
+
+### Android (Termux)
+
+Instala [Termux](https://termux.dev) desde F-Droid y, dentro de Termux:
+
+```bash
+pkg install python git python-pillow
+git clone <url-del-repositorio> && cd vacunacion-app
+python -m venv --system-site-packages .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+python run.py --produccion
+```
+
+`python-pillow` se instala con `pkg` porque compilarlo con `pip` en el
+teléfono suele fallar; `--system-site-packages` deja que el entorno lo use.
+Luego abre `http://127.0.0.1:5000` en el navegador del teléfono.
+
 ## Esquema SQLite actual
 
 El esquema se mantiene en `app/schema.sql` y se ejecuta con el módulo estándar
 `sqlite3` (no se usa ORM). Contiene:
 
-- `pacientes`: datos personales; la identificación es única.
-- `vacunas`: fabricante, lote, vencimiento y dosis requeridas.
+- `usuarios`: cuentas de administradores, vacunadores y pacientes; nombre,
+  tipo y número de documento (únicos juntos), correo único, contraseña con hash
+  y rol.
+- `pacientes`: fecha de nacimiento, contacto y declaración del responsable
+  (16–17 años); se enlaza con su cuenta en `usuarios`.
+- `tokens_cuenta`: enlaces de recuperación e invitación (solo el hash; vencen
+  en 30 minutos y se usan una vez).
+- `vacunador_punto`: puntos asignados a cada vacunador.
+- `auditoria`: quién cambió qué y cuándo, sin contraseñas.
+- `vacunas`: el producto (nombre, fabricante y dosis requeridas).
+- `lotes`: lotes de cada vacuna con su fecha de vencimiento.
 - `puntos_vacunacion`: ubicación, horario y capacidad diaria.
-- `inventarios_biologicos`: existencias por combinación de punto y vacuna.
-- `citas`: paciente, vacuna, punto, fecha, hora y estado.
-- `dosis_aplicadas`: historial de dosis administradas.
+- `campanas`, `campana_puntos`, `campana_vacunas`: campañas (borrador,
+  publicada, pausada o finalizada) con sus puntos y vacunas.
+- `franjas`: horarios de atención por punto y fecha; sus cupos se comparten
+  entre todas las campañas.
+- `inventarios_biologicos`: saldo físico por punto y lote; nunca es negativo.
+- `movimientos_inventario`: cada entrada o ajuste con cantidad, motivo, autor
+  y fecha.
+- `notificaciones`: avisos en la cuenta de cada usuario y el estado de su correo.
+- `citas`: paciente, campaña, vacuna, franja y estado (reservada, presente,
+  aplicada, no aplicada, registro anulado, cancelada o no asistió). Un paciente
+  tiene como máximo una cita activa por vacuna.
+- `dosis_aplicadas`: cada aplicación con su cita, lote real, número de dosis,
+  autor y estado (vigente o anulada).
 
-Inventario tiene una restricción única por punto y vacuna. Las citas y dosis
-se eliminan si se elimina el paciente; los puntos y vacunas referenciados por
-citas o dosis quedan protegidos contra borrado para conservar el historial.
-El inventario sí se elimina junto con su punto o vacuna. Las claves foráneas
-se activan en cada conexión SQLite en `app/db.py`.
+Las citas ya no se borran en cascada: la historia se conserva. Las claves
+foráneas se activan en cada conexión SQLite en `app/db.py`.
+
+## Cuentas
+
+Hay tres roles: **administrador**, **vacunador** y **paciente**. Cada cuenta
+tiene un solo rol. Todos los comandos se ejecutan en una terminal abierta en la
+carpeta del proyecto y con el entorno virtual activado:
+
+```bash
+# macOS/Linux
+source .venv/bin/activate
+# Windows
+.venv\Scripts\activate
+```
+
+### Paciente
+
+Cualquier persona desde los 16 años crea su cuenta en la app, con el enlace
+«Crear cuenta». Entre los 16 y 17 años debe marcar la declaración de
+autorización de su responsable.
+
+### Administrador
+
+El primer administrador se crea desde la terminal (no hay contraseñas guardadas
+en el repositorio):
+
+```bash
+flask --app run crear-admin
+```
+
+El comando pregunta, uno por uno:
+
+1. Nombre completo.
+2. Tipo de documento: `CC`, `CE` o `PASAPORTE`.
+3. Número de documento.
+4. Correo.
+5. Contraseña y su confirmación (no se ve mientras se escribe). Debe tener al
+   menos 6 caracteres, con mayúscula, minúscula, número y símbolo.
+
+Si todo está bien responde `Administrador creado.`. Solo se puede crear uno de
+esta forma; si ya existe, responde `Ya existe un administrador.`
+
+Para ingresar: `python run.py`, abrir http://127.0.0.1:5000/ingresar y usar el
+tipo y número de documento con la contraseña. El administrador ve «Usuarios»
+en el menú.
+
+### Vacunador
+
+El vacunador no se registra solo: el administrador lo invita y le asigna los
+puntos donde trabaja.
+
+1. **Debe existir al menos un punto de vacunación.** Si no hay ninguno, el
+   administrador lo crea en **Puntos → Nuevo punto**.
+
+2. Ejecutar `python run.py`, ingresar como administrador y abrir **Usuarios →
+   Invitar vacunador**.
+3. Llenar nombre, documento y correo, marcar uno o más puntos y pulsar
+   **Invitar**.
+4. El vacunador recibe un enlace para crear su contraseña. **Si el correo no
+   está configurado, el enlace aparece en la terminal donde corre
+   `python run.py`**, en un bloque como este:
+
+   ```text
+   --- Correo para juan@example.com: Invitación al sistema de vacunación
+   ...
+   Usa este enlace para establecer tu contraseña: http://127.0.0.1:5000/invitacion?token=...
+   ---
+   ```
+
+5. Abrir ese enlace (por ejemplo en una ventana privada, para no cerrar la
+   sesión del administrador), escribir la contraseña del vacunador y guardar.
+6. El vacunador ya puede ingresar con su documento y contraseña. En «Mi perfil»
+   ve sus puntos asignados.
+
+El enlace vence a los 30 minutos y solo sirve una vez. Si venció, en
+**Usuarios** aparece el botón **Renovar invitación**, que genera un enlace nuevo
+y anula el anterior. Los puntos de un vacunador se cambian con el enlace
+**Puntos** de esa misma tabla.
+
+### Olvidé mi contraseña
+
+En «Ingresar» → «Olvidé mi contraseña». El enlace de recuperación también
+aparece en la terminal si el correo no está configurado.
+
+## Catálogos y campañas (administrador)
+
+Orden sugerido para preparar una campaña:
+
+1. **Puntos → Nuevo punto:** nombre, dirección, horario y capacidad diaria.
+2. **Vacunas → Nueva vacuna:** nombre, fabricante y dosis del esquema.
+3. **Lotes → Nuevo lote:** vacuna, código y vencimiento. Un lote sirve hasta su
+   fecha de vencimiento, inclusive.
+4. **Franjas → Nueva franja:** punto, fecha, horario (dentro del horario del
+   punto, sin cruzarse con otra franja) y cupos.
+5. **Campañas → Nueva campaña:** datos, vacunas y puntos. Queda en borrador.
+6. En la campaña, **Publicar**. Se exige al menos un punto, una vacuna y una
+   franja dentro de sus fechas. Luego se puede **Pausar** (no recibe reservas
+   nuevas y conserva las citas) y **Reanudar**. Al pasar su fecha final queda
+   finalizada.
+
+Si un cambio de fechas, puntos o vacunas deja citas activas por fuera, la app
+las lista y pide confirmar con un motivo: se cancelan y cada paciente recibe un
+aviso. En «Usuarios» el administrador puede desactivar a un paciente (cancela
+sus citas activas y cierra sus sesiones) y reactivarlo sin restaurar citas.
+Los registros no se borran, para conservar el historial. Los cupos de una
+franja no pueden quedar por debajo de las citas que ya la ocupan.
+
+## Inventario
+
+- **Inventario → Registrar entrada** (administrador): punto, lote, cantidad y
+  motivo. La fecha y el autor se guardan solos.
+- **Ajustar** en cada fila (administrador): número positivo para aumentar o
+  negativo para disminuir, siempre con motivo. Se usa también para dar de baja
+  un lote vencido. El saldo nunca queda negativo.
+- **Ver movimientos**: historial de entradas y ajustes con su autor.
+- El vacunador consulta el inventario de sus puntos, sin modificarlo.
+- «Dosis por vacuna» muestra las dosis utilizables (lotes no vencidos), las
+  reservadas por citas activas y el faltante. Si hay faltante, las reservas
+  nuevas de esa vacuna en ese punto quedan bloqueadas; las citas existentes se
+  conservan.
+
+## Citas
+
+El paciente reserva desde una campaña publicada y gestiona sus citas en «Citas»
+(cancelar o reprogramar hasta 2 horas antes). El personal ve la agenda de sus
+puntos, registra la llegada y cierra la atención. Las citas sin llegada pasan a
+«No asistió» 30 minutos después del fin de su franja.
+
+## Aplicaciones
+
+Con el paciente presente, el vacunador del punto registra la aplicación desde la
+agenda: elige el lote y el número de dosis, y se descuenta una unidad. En
+«Ver aplicaciones registradas» se corrige el lote o el número (el administrador
+o el autor), y el administrador puede anular o rectificar una aplicación.
+
+## Historial y reportes
+
+El paciente ve su historial en «Historial» y descarga un PDF académico (sin
+validez oficial). El vacunador consulta el historial de los pacientes de sus
+puntos desde la agenda. El inicio del administrador es un panel con filtros por
+fecha, campaña y punto, y exporta citas, aplicaciones e inventario en CSV.
+
+## Avisos y correo
+
+Cada usuario ve sus avisos en «Avisos». Si un correo falla, el aviso se conserva
+y el personal lo reintenta en «Avisos → Correos fallidos». Sin `MAIL_SERVER`,
+`python run.py` muestra los correos en la terminal; en producción
+(`--produccion`) el correo real es obligatorio.
+
+Los correos reales se envían con [Brevo](https://www.brevo.com) por SMTP (no
+requiere librerías adicionales ni dominio propio):
+
+1. Crea una cuenta gratuita en Brevo.
+2. Verifica el remitente: **Senders, Domains & Dedicated IPs → Senders → Add a
+   sender**, con el nombre «Vacunación» y el correo del proyecto. Brevo envía
+   un código a ese correo para confirmarlo.
+3. En **SMTP & API → SMTP**, pulsa **Generate a new SMTP key** y copia la clave
+   (empieza por `xsmtpsib-` y solo se muestra una vez). En la misma página está
+   el **Login** (termina en `@smtp-brevo.com`).
+4. Copia `.env.example` como `.env` (no se sube a Git) y completa:
+   - `MAIL_USERNAME`: el Login.
+   - `MAIL_PASSWORD`: la clave SMTP (no la contraseña de la cuenta).
+   - `MAIL_FROM`: el remitente verificado, p. ej.
+     `Vacunación <vacunacion.usc@gmail.com>`.
+
+   El servidor (`smtp-relay.brevo.com`, puerto 587) ya viene puesto.
+5. Comprueba la configuración:
+
+   ```bash
+   flask --app run probar-correo tu-correo@example.com
+   ```
+
+   Si responde `No se pudo enviar`, la terminal muestra el tipo de error:
+   `SMTPAuthenticationError` indica un Login o clave mal copiados; otro error
+   `SMTP…` suele ser un remitente sin verificar. Los envíos y rechazos también
+   aparecen en Brevo, en **Transactional → Logs**.
+
+El plan gratuito de Brevo permite 300 correos al día. Sin dominio propio,
+algunos correos pueden llegar a spam: pide a los usuarios revisar esa carpeta
+la primera vez.
 
 ## Acceso a SQLite desde Flask
 
@@ -58,3 +298,15 @@ se pueden leer por nombre de columna (`fila["nombre_completo"]`). Flask cierra
 la conexión al terminar el contexto de la petición. Al añadir modelos,
 mantenlos sobre esta conexión y usa consultas parametrizadas (`?`) para
 valores de usuario.
+
+## Pruebas
+
+Las pruebas usan pytest y una base temporal (nunca `instance/vacunacion.db`).
+
+```bash
+pip install -r requirements-dev.txt
+pytest -q
+```
+
+Cuando cambie `app/schema.sql`, borren su `instance/vacunacion.db` local y
+vuelvan a ejecutar la app para regenerarla (los datos son ficticios).

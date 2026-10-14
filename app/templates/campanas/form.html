@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% from "_formularios.html" import csrf_campo, campo, area_texto, casillas %}
+
+{% block titulo %}
+{{ "Editar campaña" if campana.id else "Nueva campaña" }}
+{% endblock %}
+
+{% block contenido %}
+<h1>{{ "Editar campaña" if campana.id else "Nueva campaña" }}</h1>
+
+{% if not campana.id %}
+  <p>La campaña se crea en borrador. Para publicarla necesita al menos un punto, una vacuna y una franja.</p>
+{% endif %}
+
+{% if errores.get("general") %}
+  <p class="mensaje error" role="alert">{{ errores["general"] }}</p>
+{% endif %}
+
+<form method="post">
+  {{ csrf_campo() }}
+  {{ campo("nombre", "Nombre", valores, errores) }}
+  {{ area_texto("descripcion", "Descripción", valores, errores) }}
+  {{ campo("fecha_inicio", "Fecha de inicio", valores, errores, tipo="date") }}
+  {{ campo("fecha_fin", "Fecha final", valores, errores, tipo="date") }}
+  {{ casillas("vacunas", "Vacunas ofrecidas", vacunas, elegidos_vacunas, errores, vacio="Primero registra vacunas.") }}
+  {{ casillas("puntos", "Puntos participantes", puntos, elegidos_puntos, errores, vacio="Primero registra puntos.") }}
+  <button type="submit">Guardar campaña</button>
+</form>
+
+<p><a href="{{ url_for('campanas.campanas') }}">Volver a campañas</a></p>
+{% endblock %}

@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% from "_formularios.html" import estado %}
+
+{% block titulo %}
+Aplicaciones
+{% endblock %}
+
+{% block contenido %}
+<h1>Aplicaciones registradas</h1>
+
+<p>Últimas 200 aplicaciones{% if g.usuario.rol == "vacunador" %} de tus puntos{% endif %}.</p>
+
+<div class="tabla">
+<table>
+  <thead><tr><th>Fecha</th><th>Paciente</th><th>Vacuna · dosis</th><th>Lote</th><th>Punto</th><th>Registró</th><th>Estado</th><th>Acciones</th></tr></thead>
+  <tbody>
+    {% for dosis in aplicaciones %}
+      <tr>
+        <td>{{ dosis.fecha_aplicacion }}</td>
+        <td>{{ dosis.paciente }}</td>
+        <td>{{ dosis.vacuna }} · {{ dosis.numero_dosis }}</td>
+        <td>{{ dosis.lote }}</td>
+        <td>{{ dosis.punto }}</td>
+        <td>{{ dosis.autor }}</td>
+        <td>{% if dosis.estado == "vigente" %}{{ estado("vigente", "Vigente") }}{% else %}{{ estado("vencido", "Anulada") }}{% endif %}</td>
+        <td>
+          {% if dosis.estado == "vigente" %}
+            {% if dosis.puede_corregir(g.usuario) %}<a href="{{ url_for('aplicaciones.corregir', dosis_id=dosis.id) }}">Corregir</a>{% endif %}
+            {% if g.usuario.rol == "administrador" %}
+              <a href="{{ url_for('aplicaciones.anular', dosis_id=dosis.id) }}">Anular</a>
+              <a href="{{ url_for('aplicaciones.rectificar', dosis_id=dosis.id) }}">Rectificar</a>
+            {% endif %}
+          {% endif %}
+        </td>
+      </tr>
+    {% else %}
+      <tr><td colspan="8">Aún no hay aplicaciones registradas.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endblock %}

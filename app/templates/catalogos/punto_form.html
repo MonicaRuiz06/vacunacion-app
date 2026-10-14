@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% from "_formularios.html" import csrf_campo, campo %}
+
+{% block titulo %}
+{{ "Editar punto" if punto.id else "Nuevo punto" }}
+{% endblock %}
+
+{% block contenido %}
+<h1>{{ "Editar punto" if punto.id else "Nuevo punto" }}</h1>
+
+<form method="post">
+  {{ csrf_campo() }}
+  {{ campo("nombre", "Nombre", valores, errores) }}
+  {{ campo("direccion", "Dirección", valores, errores) }}
+  {{ campo("municipio", "Municipio", valores, errores, requerido=false) }}
+  {{ campo("hora_apertura", "Hora de apertura", valores, errores, tipo="time") }}
+  {{ campo("hora_cierre", "Hora de cierre", valores, errores, tipo="time") }}
+  {{ campo("capacidad_diaria", "Capacidad diaria (personas)", valores, errores, tipo="number") }}
+  <button type="submit">Guardar</button>
+</form>
+
+<p><a href="{{ url_for('catalogos.puntos') }}">Volver a puntos</a></p>
+{% endblock %}

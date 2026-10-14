@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% from "_formularios.html" import csrf_campo, campo, seleccion %}
+
+{% block titulo %}
+Nueva franja
+{% endblock %}
+
+{% block contenido %}
+<h1>Nueva franja</h1>
+
+<p>La franja debe quedar dentro del horario del punto y no cruzarse con otra del mismo día.</p>
+
+<form method="post">
+  {{ csrf_campo() }}
+  {{ seleccion("punto_id", "Punto", puntos, valores, errores) }}
+  {{ campo("fecha", "Fecha", valores, errores, tipo="date") }}
+  {{ campo("hora_inicio", "Hora de inicio", valores, errores, tipo="time") }}
+  {{ campo("hora_fin", "Hora final", valores, errores, tipo="time") }}
+  {{ campo("cupos", "Cupos", valores, errores, tipo="number") }}
+  <button type="submit">Crear franja</button>
+</form>
+
+<p><a href="{{ url_for('campanas.franjas') }}">Volver a franjas</a></p>
+{% endblock %}

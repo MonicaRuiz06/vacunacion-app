@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% from "_formularios.html" import csrf_campo, campo, seleccion %}
+
+{% block titulo %}
+Corregir aplicación
+{% endblock %}
+
+{% block contenido %}
+<h1>Corregir aplicación</h1>
+{% include "aplicaciones/_resumen.html" %}
+
+<p>Solo se corrige el lote o el número de dosis. Si cambias el lote, se repone una unidad al lote anterior y se descuenta del nuevo. El registro original queda en la auditoría.</p>
+
+<form method="post">
+  {{ csrf_campo() }}
+  {{ seleccion("lote_id", "Lote correcto (déjalo sin elegir para no cambiarlo)", lotes, valores, errores) }}
+  {{ campo("numero_dosis", "Número de dosis", valores, errores, tipo="number") }}
+  {{ campo("motivo", "Motivo", valores, errores) }}
+  <button type="submit">Guardar corrección</button>
+</form>
+
+<p><a href="{{ url_for('aplicaciones.listado') }}">Volver a aplicaciones</a></p>
+{% endblock %}

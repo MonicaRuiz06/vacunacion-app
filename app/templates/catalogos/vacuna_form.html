@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% from "_formularios.html" import csrf_campo, campo %}
+
+{% block titulo %}
+{{ "Editar vacuna" if vacuna.id else "Nueva vacuna" }}
+{% endblock %}
+
+{% block contenido %}
+<h1>{{ "Editar vacuna" if vacuna.id else "Nueva vacuna" }}</h1>
+
+<p>La vacuna es el producto. Los lotes, con su vencimiento, se registran aparte.</p>
+
+<form method="post">
+  {{ csrf_campo() }}
+  {{ campo("nombre", "Nombre", valores, errores) }}
+  {{ campo("fabricante", "Fabricante", valores, errores, requerido=false) }}
+  {{ campo("dosis_requeridas", "Dosis requeridas del esquema", valores, errores, tipo="number") }}
+  <button type="submit">Guardar</button>
+</form>
+
+<p><a href="{{ url_for('catalogos.vacunas') }}">Volver a vacunas</a></p>
+{% endblock %}

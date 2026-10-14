@@ -20,3 +20,18 @@ instance/*.sqlite3
 .idea/
 .DS_Store
 Thumbs.db
+
+# Cachés de pruebas y archivos temporales de SQLite
+.pytest_cache/
+instance/*.db-*
+
+# Documentación y apoyo local (no se publican)
+docs/
+specs/
+AGENTS.md
+CLAUDE.md
+
+# Docker es opcional y local
+Dockerfile
+compose.yaml
+.dockerignore
