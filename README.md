@@ -26,6 +26,13 @@ ejemplo, puedes generar una con `python -c "import secrets; print(secrets.token_
 No la subas al repositorio. En producción las cookies de sesión usan el
 atributo `Secure` y requieren HTTPS.
 
+Si el despliegue está detrás de un proxy inverso que establece cabeceras
+`X-Forwarded-*`, define `TRUSTED_PROXY_COUNT` con el número de proxies de
+confianza (por ejemplo, `1` para un proxy). Esto configura `ProxyFix` para que
+Flask genere URLs externas con el protocolo y host públicos. Déjalo en `0`
+cuando no haya un proxy de confianza; solo proxies controlados por el equipo
+deben poder enviar esas cabeceras.
+
 ## Esquema SQLite actual
 
 El esquema se mantiene en `app/schema.sql` y se ejecuta con el módulo estándar

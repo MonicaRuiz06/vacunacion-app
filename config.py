@@ -11,6 +11,8 @@ class Config:
     SECRET_KEY = os.environ.get("SECRET_KEY")
     # Cookies Secure solo se envían por HTTPS. En desarrollo local se usa HTTP.
     SESSION_COOKIE_SECURE = APP_ENV == "production"
+    # Cantidad de proxies inversos de confianza que agregan X-Forwarded-*.
+    TRUSTED_PROXY_COUNT = int(os.environ.get("TRUSTED_PROXY_COUNT", "0"))
     DATABASE = os.environ.get(
         "DATABASE_PATH", os.path.join(INSTANCE_DIR, "vacunacion.db")
     )
