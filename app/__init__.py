@@ -1,6 +1,7 @@
 """Fábrica de la aplicación Flask."""
 
 import os
+import secrets
 
 from flask import Flask, render_template
 
@@ -13,6 +14,12 @@ def create_app(test_config=None):
     app.config.from_object(Config)
     if test_config is not None:
         app.config.update(test_config)
+
+    if app.config["APP_ENV"] == "production" and not app.config.get("SECRET_KEY"):
+        raise RuntimeError("Define SECRET_KEY antes de iniciar la app en producción.")
+    if not app.config.get("SECRET_KEY"):
+        # Clave efímera para desarrollo; nunca se reutiliza como secreto de producción.
+        app.config["SECRET_KEY"] = secrets.token_hex(32)
 
     os.makedirs(app.instance_path, exist_ok=True)
     db.init_app(app)

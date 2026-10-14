@@ -7,7 +7,10 @@ INSTANCE_DIR = os.path.join(BASE_DIR, "instance")
 
 
 class Config:
-    SECRET_KEY = os.environ.get("SECRET_KEY", "dev-only-change-me")
+    APP_ENV = os.environ.get("APP_ENV", "development").lower()
+    SECRET_KEY = os.environ.get("SECRET_KEY")
+    # Cookies Secure solo se envían por HTTPS. En desarrollo local se usa HTTP.
+    SESSION_COOKIE_SECURE = APP_ENV == "production"
     DATABASE = os.environ.get(
         "DATABASE_PATH", os.path.join(INSTANCE_DIR, "vacunacion.db")
     )
