@@ -1,6 +1,6 @@
 Sistema de Gestión de Campañas de Vacunación — Enlaces del proyecto
 Mini-Proyecto I — Lenguajes de Programación (2026B)
-Integrantes: Mónica Alexandra Ruiz Martínez, Cristian David Valencia Hernández
+Integrantes: Mónica Alexandra Ruiz Martínez, Cristian David Valencia Hernández, Miguel Martinez, Ricardo Figueroa, Omar Sinisterra
 
 Repositorio (GitHub):
 https://github.com/MonicaRuiz06/vacunacion-app
